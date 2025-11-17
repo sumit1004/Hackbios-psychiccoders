@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketplace | FXcgo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="marketpace.css">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+</head>
+<body>
+    <div class="marketplace-container">
+        <!-- Header -->
+        <header class="marketplace-header">
+            <div class="header-content">
+                <div class="header-left">
+                    <a href="../index.html" class="logo-link">
+                        <span class="logo-text">FXcgo Marketplace</span>
+                    </a>
+                </div>
+                <div class="header-right">
+                    <div class="search-wrapper">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                        <input type="text" id="productSearch" placeholder="Search products..." autocomplete="off">
+                    </div>
+                    <button class="cart-btn" id="cartButton" onclick="toggleCart()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 7h18"></path>
+                            <path d="M6 7V3h12v4"></path>
+                            <path d="M5 7l1.68 12.06A2 2 0 0 0 8.66 21h6.68a2 2 0 0 0 1.98-1.94L19 7"></path>
+                        </svg>
+                        <span class="cart-badge" id="cartBadge">0</span>
+                    </button>
+                    <div class="user-menu">
+                        <button class="user-btn" id="userButton" onclick="toggleUserMenu()">
+                            <div class="user-avatar" id="userAvatar">
+                                <span id="userInitials">U</span>
+                            </div>
+                            <span id="userName">Guest</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        <div class="user-dropdown" id="userDropdown">
+                            <a href="#" id="loginLink" onclick="handleLogin()">Login</a>
+                            <a href="#" id="dashboardLink" style="display: none;" onclick="goToDashboard()">My Dashboard</a>
+                            <a href="#" id="logoutLink" style="display: none;" onclick="handleLogout()">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="marketplace-main">
+            <!-- Filters Sidebar -->
+            <aside class="filters-sidebar" id="filtersSidebar">
+                <div class="filters-header">
+                    <h3>Filters</h3>
+                    <button class="close-filters" onclick="toggleFilters()" aria-label="Close filters">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="filters-content">
+                    <div class="filter-group">
+                        <label>Category</label>
+                        <select id="categoryFilter" class="filter-select">
+                            <option value="">All Categories</option>
+                            <option value="agri">Agri & Food</option>
+                            <option value="textiles">Textiles & Apparel</option>
+                            <option value="engineering">Engineering Goods</option>
+                            <option value="chemicals">Chemicals</option>
+                            <option value="pharma">Pharma & Life Sciences</option>
+                            <option value="handicrafts">Handicrafts</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Price Range</label>
+                        <div class="price-range">
+                            <input type="number" id="minPrice" placeholder="Min" min="0">
+                            <span>to</span>
+                            <input type="number" id="maxPrice" placeholder="Max" min="0">
+                        </div>
+                    </div>
+                    <div class="filter-group">
+                        <label>Currency</label>
+                        <select id="currencyFilter" class="filter-select">
+                            <option value="">All Currencies</option>
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                            <option value="AED">AED</option>
+                            <option value="INR">INR</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Incoterm</label>
+                        <select id="incotermFilter" class="filter-select">
+                            <option value="">All Incoterms</option>
+                            <option value="FOB">FOB</option>
+                            <option value="CIF">CIF</option>
+                            <option value="CFR">CFR</option>
+                            <option value="DAP">DAP</option>
+                            <option value="DDP">DDP</option>
+                            <option value="EXW">EXW</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Target Market</label>
+                        <input type="text" id="marketFilter" placeholder="e.g., UAE, EU, USA" class="filter-input">
+                    </div>
+                    <button class="btn-clear-filters" onclick="clearFilters()">Clear All Filters</button>
+                </div>
+            </aside>
+
+            <!-- Products Section -->
+            <section class="products-section">
+                <div class="products-header">
+                    <div class="products-title">
+                        <h1>Global Product Marketplace</h1>
+                        <p id="productsCount">Loading products...</p>
+                    </div>
+                    <div class="products-actions">
+                        <button class="btn-filter-toggle" onclick="toggleFilters()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                            </svg>
+                            Filters
+                        </button>
+                        <select id="sortSelect" class="sort-select">
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                            <option value="price-low">Price: Low to High</option>
+                            <option value="price-high">Price: High to Low</option>
+                            <option value="name-asc">Name: A to Z</option>
+                            <option value="name-desc">Name: Z to A</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="productsLoading" class="products-loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading products from marketplace...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div id="productsEmpty" class="products-empty" style="display: none;">
+                    <div class="empty-icon">📦</div>
+                    <h3>No products found</h3>
+                    <p>Try adjusting your filters or search terms</p>
+                </div>
+
+                <!-- Products Grid -->
+                <div id="productsGrid" class="products-grid"></div>
+
+                <!-- Load More Button -->
+                <div id="loadMoreContainer" class="load-more-container" style="display: none;">
+                    <button class="btn-load-more" onclick="loadMoreProducts()">Load More Products</button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Shopping Cart Sidebar -->
+        <aside class="cart-sidebar" id="cartSidebar">
+            <div class="cart-header">
+                <h3>Shopping Cart</h3>
+                <button class="close-cart" onclick="toggleCart()" aria-label="Close cart">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="cart-content" id="cartContent">
+                <div class="cart-empty">
+                    <div class="empty-icon">🛒</div>
+                    <p>Your cart is empty</p>
+                    <p class="cart-empty-subtitle">Add products from the marketplace</p>
+                </div>
+            </div>
+            <div class="cart-footer" id="cartFooter" style="display: none;">
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <strong id="cartTotal">$0.00</strong>
+                </div>
+                <button class="btn-checkout" id="checkoutButton" onclick="proceedToCheckout()">Proceed to Checkout</button>
+            </div>
+        </aside>
+
+        <!-- Product Detail Modal -->
+        <div id="productModal" class="product-modal" role="dialog" aria-labelledby="productModalTitle" aria-hidden="true">
+            <div class="product-modal-overlay" onclick="closeProductModal()"></div>
+            <div class="product-modal-container">
+                <button class="product-modal-close" onclick="closeProductModal()" aria-label="Close modal">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="product-modal-content" id="productModalContent"></div>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div id="marketplaceToast" class="toast"></div>
+    </div>
+
+    <script src="marketplace.js"></script>
+</body>
+</html>
+

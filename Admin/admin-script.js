@@ -18,8 +18,21 @@ const firebaseConfig = {
     databaseURL: "https://expoter-af015-default-rtdb.firebaseio.com/"
 };
 
+// Importer Firebase Config
+const importerFirebaseConfig = {
+    apiKey: "AIzaSyAR-xJ3WZsw8m9ZE97hDRiHFaU0Uilq9Lw",
+    authDomain: "impoter-9e6bf.firebaseapp.com",
+    databaseURL: "https://impoter-9e6bf-default-rtdb.firebaseio.com",
+    projectId: "impoter-9e6bf",
+    storageBucket: "impoter-9e6bf.firebasestorage.app",
+    messagingSenderId: "663462993062",
+    appId: "1:663462993062:web:be35a602082d488315e867",
+    measurementId: "G-7ZHY799QTS"
+};
+
 // Initialize Firebase
 let firebaseApp, auth, database, firestore;
+let importerApp, importerDatabase;
 try {
     try {
         firebaseApp = firebase.app();
@@ -30,6 +43,15 @@ try {
     auth = firebase.auth();
     database = firebase.database();
     firestore = firebase.firestore();
+    
+    // Initialize importer Firebase app
+    try {
+        importerApp = firebase.initializeApp(importerFirebaseConfig, 'importerApp');
+        importerDatabase = importerApp.database();
+        console.log('Importer Firebase initialized successfully');
+    } catch (e) {
+        console.warn('Failed to initialize importer Firebase:', e);
+    }
     
     console.log('Firebase initialized successfully for Admin Panel');
 } catch (error) {
@@ -43,8 +65,10 @@ const ADMIN_DEFAULT = {
 };
 
 let videoCallRequestsListener = null;
+let importerVideoCallRequestsListener = null;
 let activeRequestId = null;
 let activeUserId = null;
+let activeRequestType = null; // 'exporter' or 'importer'
 let adminLocalStream = null;
 let adminPeerConnection = null;
 let ekycData = null;
@@ -147,37 +171,156 @@ function updateAuthStatus(isConnected, message) {
 }
 
 function initializeAdminPanel() {
+    // Ensure authentication for both Firebase instances
+    if (auth && !auth.currentUser) {
+        auth.signInAnonymously().catch(err => {
+            console.warn('Exporter Firebase anonymous auth failed:', err);
+        });
+    }
+    
+    if (importerApp) {
+        const importerAuth = importerApp.auth();
+        if (importerAuth && !importerAuth.currentUser) {
+            importerAuth.signInAnonymously().catch(err => {
+                console.warn('Importer Firebase anonymous auth failed:', err);
+            });
+        }
+    }
+    
     listenForVideoCallRequests();
     initializeAdminSupportCenter();
 }
 
 /**
- * Listen for pending video call requests
+ * Listen for pending video call requests (both exporter and importer)
  */
 function listenForVideoCallRequests() {
-    if (!firestore) return;
-    
     const requestsList = document.getElementById('videoCallRequestsList');
+    if (!requestsList) return;
     
-    videoCallRequestsListener = firestore.collection('videoCallRequests')
-        .where('status', '==', 'pending')
-        .orderBy('timestamp', 'desc')
-        .onSnapshot((snapshot) => {
-            requestsList.innerHTML = '';
+    let allRequests = [];
+    
+    // Listen to exporter requests (Firestore)
+    if (firestore) {
+        // Try to authenticate first for better permissions
+        if (auth && !auth.currentUser) {
+            auth.signInAnonymously().catch(err => {
+                console.warn('Anonymous auth failed, continuing without auth:', err);
+            });
+        }
+        
+        videoCallRequestsListener = firestore.collection('videoCallRequests')
+            .where('status', '==', 'pending')
+            .orderBy('timestamp', 'desc')
+            .onSnapshot((snapshot) => {
+                allRequests = allRequests.filter(req => req.type !== 'exporter');
+                
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    allRequests.push({
+                        id: doc.id,
+                        type: 'exporter',
+                        data: data
+                    });
+                });
+                
+                renderAllRequests(allRequests);
+            }, (error) => {
+                console.error('Error listening for exporter video call requests:', error);
+                if (error.code === 'permission-denied' || error.code === 'PERMISSION_DENIED') {
+                    console.warn('Permission denied for Firestore. Please configure Firestore security rules to allow admin access to videoCallRequests collection.');
+                    // Show message in UI
+                    const requestsList = document.getElementById('videoCallRequestsList');
+                    if (requestsList && !requestsList.querySelector('.permission-error')) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'permission-error';
+                        errorDiv.style.cssText = 'padding: 16px; background: #fee2e2; color: #991b1b; border-radius: 8px; margin: 8px 0;';
+                        errorDiv.innerHTML = '<strong>Permission Error:</strong> Admin needs Firestore read access to videoCallRequests collection. Please configure Firestore security rules.';
+                        requestsList.appendChild(errorDiv);
+                    }
+                }
+            });
+    }
+    
+    // Listen to importer requests (Realtime Database)
+    if (importerDatabase) {
+        // Try to authenticate with importer Firebase for better permissions
+        const importerAuth = importerApp?.auth();
+        if (importerAuth && !importerAuth.currentUser) {
+            importerAuth.signInAnonymously().catch(err => {
+                console.warn('Importer anonymous auth failed, continuing:', err);
+            });
+        }
+        
+        // Listen to all importers' videoCallRequests
+        const importerRequestsRef = importerDatabase.ref('importers');
+        importerVideoCallRequestsListener = importerRequestsRef.on('value', (snapshot) => {
+            allRequests = allRequests.filter(req => req.type !== 'importer');
             
-            if (snapshot.empty) {
-                requestsList.innerHTML = '<div class="empty-state">No pending video call requests</div>';
-                return;
+            if (snapshot.exists()) {
+                const importers = snapshot.val();
+                Object.keys(importers).forEach(userId => {
+                    const userData = importers[userId];
+                    if (userData.videoCallRequests) {
+                        Object.keys(userData.videoCallRequests).forEach(requestId => {
+                            const requestData = userData.videoCallRequests[requestId];
+                            if (requestData.status === 'pending') {
+                                allRequests.push({
+                                    id: requestId,
+                                    userId: userId,
+                                    type: 'importer',
+                                    data: requestData
+                                });
+                            }
+                        });
+                    }
+                });
             }
             
-            snapshot.forEach((doc) => {
-                const data = doc.data();
-                const requestItem = createRequestItem(doc.id, data);
-                requestsList.appendChild(requestItem);
-            });
+            renderAllRequests(allRequests);
         }, (error) => {
-            console.error('Error listening for video call requests:', error);
+            console.error('Error listening for importer video call requests:', error);
+            if (error.code === 'PERMISSION_DENIED' || error.code === 'permission_denied') {
+                console.warn('Permission denied for importer database. Please configure Realtime Database security rules to allow admin access.');
+                // Show message in UI
+                const requestsList = document.getElementById('videoCallRequestsList');
+                if (requestsList && !requestsList.querySelector('.permission-error-importer')) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'permission-error-importer';
+                    errorDiv.style.cssText = 'padding: 16px; background: #fee2e2; color: #991b1b; border-radius: 8px; margin: 8px 0;';
+                    errorDiv.innerHTML = '<strong>Permission Error:</strong> Admin needs Realtime Database read access to /importers path. Please update security rules in firebase-security-rules.json and apply them in Firebase Console.';
+                    requestsList.appendChild(errorDiv);
+                }
+            }
         });
+    }
+}
+
+/**
+ * Render all video call requests (both exporter and importer)
+ */
+function renderAllRequests(allRequests) {
+    const requestsList = document.getElementById('videoCallRequestsList');
+    if (!requestsList) return;
+    
+    requestsList.innerHTML = '';
+    
+    if (allRequests.length === 0) {
+        requestsList.innerHTML = '<div class="empty-state">No pending video call requests</div>';
+        return;
+    }
+    
+    // Sort by timestamp (newest first)
+    allRequests.sort((a, b) => {
+        const timeA = a.data.timestamp || a.data.createdAt || 0;
+        const timeB = b.data.timestamp || b.data.createdAt || 0;
+        return timeB - timeA;
+    });
+    
+    allRequests.forEach(request => {
+        const requestItem = createRequestItem(request.id, request.data, request.type, request.userId);
+        requestsList.appendChild(requestItem);
+    });
 }
 
 // ============================================
@@ -201,6 +344,13 @@ function setupSupportStatusToggle() {
     const label = document.getElementById('adminSupportStatusLabel');
     if (!toggle || !label) return;
 
+    // Try to authenticate first
+    if (auth && !auth.currentUser) {
+        auth.signInAnonymously().catch(err => {
+            console.warn('Anonymous auth for support status failed:', err);
+        });
+    }
+
     const statusRef = database.ref('supportStatus/admin');
 
     toggle.addEventListener('change', async () => {
@@ -214,6 +364,9 @@ function setupSupportStatusToggle() {
             setAdminSupportFormState(toggle.checked && Boolean(adminCurrentSupportUserId));
         } catch (error) {
             console.error('Unable to update support status:', error);
+            if (error.code === 'PERMISSION_DENIED' || error.code === 'permission_denied') {
+                alert('Permission denied. Please configure Realtime Database security rules to allow admin access to /supportStatus/admin');
+            }
             toggle.checked = !toggle.checked; // revert
         }
     });
@@ -232,6 +385,10 @@ function setupSupportStatusToggle() {
 
     statusRef.on('value', handleStatusSnapshot, (error) => {
         console.error('Support status listener error:', error);
+        if (error.code === 'PERMISSION_DENIED' || error.code === 'permission_denied') {
+            console.warn('Permission denied for support status. Please configure Realtime Database security rules.');
+            label.textContent = 'Permission Error';
+        }
     });
 
     adminSupportStatusUnsub = () => statusRef.off('value', handleStatusSnapshot);
@@ -387,21 +544,24 @@ function setAdminSupportFormState(enabled) {
 /**
  * Create request item element
  */
-function createRequestItem(requestId, data) {
+function createRequestItem(requestId, data, requestType = 'exporter', userId = null) {
     const item = document.createElement('div');
     item.className = 'request-item';
     
-    const timeAgo = getTimeAgo(data.createdAt);
+    const timestamp = data.createdAt || data.timestamp;
+    const timeAgo = getTimeAgo(timestamp);
+    const userType = requestType === 'importer' ? 'Importer' : 'Exporter';
+    const actualUserId = userId || data.userId;
     
     item.innerHTML = `
         <div class="request-info">
-            <h3>${data.userName || 'User'}</h3>
+            <h3>${data.userName || 'User'} <span style="font-size: 12px; color: var(--color-primary); font-weight: normal;">(${userType})</span></h3>
             <p>${data.userEmail || ''}</p>
             <p style="font-size: 12px; color: var(--color-text-secondary); margin-top: 4px;">Requested ${timeAgo}</p>
         </div>
         <div class="request-actions">
-            <button class="btn-accept" onclick="acceptVideoCall('${requestId}', '${data.userId}')">Accept</button>
-            <button class="btn-reject-request" onclick="rejectVideoCallRequest('${requestId}')">Reject</button>
+            <button class="btn-accept" onclick="acceptVideoCall('${requestId}', '${actualUserId}', '${requestType}')">Accept</button>
+            <button class="btn-reject-request" onclick="rejectVideoCallRequest('${requestId}', '${requestType}', '${actualUserId}')">Reject</button>
         </div>
     `;
     
@@ -427,26 +587,42 @@ function getTimeAgo(timestamp) {
 /**
  * Accept video call request
  */
-async function acceptVideoCall(requestId, userId) {
-    if (!firestore) return;
-    
+async function acceptVideoCall(requestId, userId, requestType = 'exporter') {
     activeRequestId = requestId;
     activeUserId = userId;
+    activeRequestType = requestType;
     
     try {
-        await firestore.collection('videoCallRequests').doc(requestId).update({
-            status: 'accepted',
-            agentId: ADMIN_DEFAULT.id,
-            agentEmail: ADMIN_DEFAULT.email,
-            acceptedAt: new Date().toISOString()
-        });
+        if (requestType === 'importer') {
+            if (!importerDatabase) {
+                alert('Importer database not available');
+                return;
+            }
+            await importerDatabase.ref(`importers/${userId}/videoCallRequests/${requestId}`).update({
+                status: 'accepted',
+                agentId: ADMIN_DEFAULT.id,
+                agentEmail: ADMIN_DEFAULT.email,
+                acceptedAt: new Date().toISOString()
+            });
+        } else {
+            if (!firestore) {
+                alert('Firestore not available');
+                return;
+            }
+            await firestore.collection('videoCallRequests').doc(requestId).update({
+                status: 'accepted',
+                agentId: ADMIN_DEFAULT.id,
+                agentEmail: ADMIN_DEFAULT.email,
+                acceptedAt: new Date().toISOString()
+            });
+        }
         
-        await loadEKYCData(userId);
+        await loadEKYCData(userId, requestType);
         
         document.getElementById('activeCallSection').style.display = 'block';
         
-        await startAdminVideoCall(requestId);
-        listenForUserOffer(requestId);
+        await startAdminVideoCall(requestId, requestType);
+        listenForUserOffer(requestId, requestType);
         
     } catch (error) {
         console.error('Error accepting video call:', error);
@@ -457,18 +633,31 @@ async function acceptVideoCall(requestId, userId) {
 /**
  * Reject video call request
  */
-async function rejectVideoCallRequest(requestId) {
-    if (!firestore) return;
-    
+async function rejectVideoCallRequest(requestId, requestType = 'exporter', userId = null) {
     if (!confirm('Are you sure you want to reject this video call request?')) {
         return;
     }
     
     try {
-        await firestore.collection('videoCallRequests').doc(requestId).update({
-            status: 'rejected',
-            rejectedAt: new Date().toISOString()
-        });
+        if (requestType === 'importer') {
+            if (!importerDatabase || !userId) {
+                alert('Importer database not available');
+                return;
+            }
+            await importerDatabase.ref(`importers/${userId}/videoCallRequests/${requestId}`).update({
+                status: 'rejected',
+                rejectedAt: new Date().toISOString()
+            });
+        } else {
+            if (!firestore) {
+                alert('Firestore not available');
+                return;
+            }
+            await firestore.collection('videoCallRequests').doc(requestId).update({
+                status: 'rejected',
+                rejectedAt: new Date().toISOString()
+            });
+        }
     } catch (error) {
         console.error('Error rejecting video call request:', error);
         alert('Failed to reject request. Please try again.');
@@ -478,25 +667,45 @@ async function rejectVideoCallRequest(requestId) {
 /**
  * Load eKYC data for user
  */
-async function loadEKYCData(userId) {
-    if (!firestore) return;
-    
+async function loadEKYCData(userId, requestType = 'exporter') {
     try {
-        const ekycDoc = await firestore.collection('ekyc').doc(userId).get();
-        if (ekycDoc.exists) {
-            ekycData = ekycDoc.data();
-            
-            const callUserName = document.getElementById('callUserName');
-            const callUserEmail = document.getElementById('callUserEmail');
-            
-            if (callUserName) {
-                callUserName.textContent = ekycData.userName || 'User';
+        if (requestType === 'importer') {
+            if (!importerDatabase) return;
+            const ekycRef = importerDatabase.ref(`importers/${userId}/ekyc`);
+            const snapshot = await ekycRef.once('value');
+            if (snapshot.exists()) {
+                ekycData = snapshot.val();
+                
+                const callUserName = document.getElementById('callUserName');
+                const callUserEmail = document.getElementById('callUserEmail');
+                
+                if (callUserName) {
+                    callUserName.textContent = ekycData.userName || 'User';
+                }
+                if (callUserEmail) {
+                    callUserEmail.textContent = ekycData.userEmail || '';
+                }
+                
+                loadDocuments();
             }
-            if (callUserEmail) {
-                callUserEmail.textContent = ekycData.userEmail || '';
+        } else {
+            if (!firestore) return;
+            const ekycDoc = await firestore.collection('ekyc').doc(userId).get();
+            if (ekycDoc.exists) {
+                ekycData = ekycDoc.data();
+                
+                const callUserName = document.getElementById('callUserName');
+                const callUserEmail = document.getElementById('callUserEmail');
+                
+                if (callUserName) {
+                    callUserName.textContent = ekycData.userName || 'User';
+                }
+                if (callUserEmail) {
+                    callUserEmail.textContent = ekycData.userEmail || '';
+                }
+                
+                loadDocuments();
             }
-            
-            loadDocuments();
         }
     } catch (error) {
         console.error('Error loading eKYC data:', error);
@@ -554,7 +763,7 @@ function loadDocuments() {
 /**
  * Start admin video call
  */
-async function startAdminVideoCall(requestId) {
+async function startAdminVideoCall(requestId, requestType = 'exporter') {
     try {
         adminLocalStream = await navigator.mediaDevices.getUserMedia({
             video: true,
@@ -582,17 +791,29 @@ async function startAdminVideoCall(requestId) {
         
         adminPeerConnection.onicecandidate = (event) => {
             if (event.candidate) {
-                // Convert RTCIceCandidate to plain JSON (Firestore can't store complex objects)
+                // Convert RTCIceCandidate to plain JSON
                 const candidateData = {
                     candidate: event.candidate.candidate,
                     sdpMLineIndex: event.candidate.sdpMLineIndex,
                     sdpMid: event.candidate.sdpMid,
                     usernameFragment: event.candidate.usernameFragment
                 };
-                firestore.collection('videoCallRequests').doc(requestId).update({
-                    agentIceCandidate: candidateData,
-                    updatedAt: new Date().toISOString()
-                });
+                
+                if (requestType === 'importer') {
+                    if (importerDatabase && activeUserId) {
+                        importerDatabase.ref(`importers/${activeUserId}/videoCallRequests/${requestId}`).update({
+                            agentIceCandidate: candidateData,
+                            updatedAt: new Date().toISOString()
+                        });
+                    }
+                } else {
+                    if (firestore) {
+                        firestore.collection('videoCallRequests').doc(requestId).update({
+                            agentIceCandidate: candidateData,
+                            updatedAt: new Date().toISOString()
+                        });
+                    }
+                }
             }
         };
         
@@ -606,20 +827,33 @@ async function startAdminVideoCall(requestId) {
  * Listen for offer from user
  */
 let adminOfferProcessed = false;  // Flag to prevent duplicate offer processing
-function listenForUserOffer(requestId) {
-    if (!firestore) return;
+let userOfferListener = null;
+function listenForUserOffer(requestId, requestType = 'exporter') {
+    // Clean up previous listener
+    if (userOfferListener) {
+        if (requestType === 'importer' && importerDatabase && activeUserId) {
+            importerDatabase.ref(`importers/${activeUserId}/videoCallRequests/${requestId}`).off('value', userOfferListener);
+        } else if (firestore) {
+            // Firestore listeners are automatically cleaned up when replaced
+        }
+    }
     
-    firestore.collection('videoCallRequests').doc(requestId)
-        .onSnapshot(async (doc) => {
-            if (!doc.exists) return;
+    adminOfferProcessed = false; // Reset flag for new call
+    
+    if (requestType === 'importer') {
+        if (!importerDatabase || !activeUserId) return;
+        
+        const requestRef = importerDatabase.ref(`importers/${activeUserId}/videoCallRequests/${requestId}`);
+        userOfferListener = requestRef.on('value', async (snapshot) => {
+            if (!snapshot.exists()) return;
             
-            const data = doc.data();
+            const data = snapshot.val();
             
             // Process offer only once and only when in stable state
             if (data.offer && !adminOfferProcessed && adminPeerConnection && adminPeerConnection.signalingState === 'stable') {
                 try {
-                    console.log('Processing offer from user, current state:', adminPeerConnection.signalingState);
-                    adminOfferProcessed = true;  // Mark as processed
+                    console.log('Processing offer from importer, current state:', adminPeerConnection.signalingState);
+                    adminOfferProcessed = true;
                     
                     await adminPeerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
                     console.log('Remote description set, state:', adminPeerConnection.signalingState);
@@ -628,26 +862,69 @@ function listenForUserOffer(requestId) {
                     await adminPeerConnection.setLocalDescription(answer);
                     console.log('Answer created and set, state:', adminPeerConnection.signalingState);
                     
-                    await firestore.collection('videoCallRequests').doc(requestId).update({
+                    await requestRef.update({
                         answer: answer,
                         status: 'connected',
                         updatedAt: new Date().toISOString()
                     });
                 } catch (error) {
                     console.error('Error processing offer:', error);
-                    adminOfferProcessed = false;  // Reset flag on error so it can retry
+                    adminOfferProcessed = false;
                 }
             }
             
-            if (data.agentIceCandidate && adminPeerConnection) {
+            if (data.userIceCandidate && adminPeerConnection) {
                 try {
-                    console.log('Adding ICE candidate from user');
-                    await adminPeerConnection.addIceCandidate(new RTCIceCandidate(data.agentIceCandidate));
+                    console.log('Adding ICE candidate from importer');
+                    await adminPeerConnection.addIceCandidate(new RTCIceCandidate(data.userIceCandidate));
                 } catch (error) {
                     console.error('Error adding ICE candidate:', error);
                 }
             }
         });
+    } else {
+        if (!firestore) return;
+        
+        firestore.collection('videoCallRequests').doc(requestId)
+            .onSnapshot(async (doc) => {
+                if (!doc.exists) return;
+                
+                const data = doc.data();
+                
+                // Process offer only once and only when in stable state
+                if (data.offer && !adminOfferProcessed && adminPeerConnection && adminPeerConnection.signalingState === 'stable') {
+                    try {
+                        console.log('Processing offer from exporter, current state:', adminPeerConnection.signalingState);
+                        adminOfferProcessed = true;
+                        
+                        await adminPeerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+                        console.log('Remote description set, state:', adminPeerConnection.signalingState);
+                        
+                        const answer = await adminPeerConnection.createAnswer();
+                        await adminPeerConnection.setLocalDescription(answer);
+                        console.log('Answer created and set, state:', adminPeerConnection.signalingState);
+                        
+                        await firestore.collection('videoCallRequests').doc(requestId).update({
+                            answer: answer,
+                            status: 'connected',
+                            updatedAt: new Date().toISOString()
+                        });
+                    } catch (error) {
+                        console.error('Error processing offer:', error);
+                        adminOfferProcessed = false;
+                    }
+                }
+                
+                if (data.userIceCandidate && adminPeerConnection) {
+                    try {
+                        console.log('Adding ICE candidate from exporter');
+                        await adminPeerConnection.addIceCandidate(new RTCIceCandidate(data.userIceCandidate));
+                    } catch (error) {
+                        console.error('Error adding ICE candidate:', error);
+                    }
+                }
+            });
+    }
 }
 
 /**
@@ -723,28 +1000,53 @@ async function endAdminCall() {
  * Approve eKYC
  */
 async function approveEKYC() {
-    if (!activeUserId || !firestore) return;
+    if (!activeUserId) return;
     
     if (!confirm('Approve eKYC for this user? This action cannot be undone.')) {
         return;
     }
     
     try {
-        console.log('Approving eKYC for user:', activeUserId);
-        await firestore.collection('ekyc').doc(activeUserId).update({
-            ekycStatus: 'verified',
-            verifiedAt: new Date().toISOString(),
-            verifiedBy: ADMIN_DEFAULT.id,
-            verifiedByEmail: ADMIN_DEFAULT.email
-        });
+        console.log('Approving eKYC for user:', activeUserId, 'type:', activeRequestType);
         
-        if (activeRequestId) {
-            console.log('Updating video call request:', activeRequestId);
-            await firestore.collection('videoCallRequests').doc(activeRequestId).update({
-                status: 'completed',
+        if (activeRequestType === 'importer') {
+            if (!importerDatabase) {
+                alert('Importer database not available');
+                return;
+            }
+            await importerDatabase.ref(`importers/${activeUserId}/ekyc`).update({
                 ekycStatus: 'verified',
-                completedAt: new Date().toISOString()
+                verifiedAt: new Date().toISOString(),
+                verifiedBy: ADMIN_DEFAULT.id,
+                verifiedByEmail: ADMIN_DEFAULT.email
             });
+            
+            if (activeRequestId) {
+                await importerDatabase.ref(`importers/${activeUserId}/videoCallRequests/${activeRequestId}`).update({
+                    status: 'completed',
+                    ekycStatus: 'verified',
+                    completedAt: new Date().toISOString()
+                });
+            }
+        } else {
+            if (!firestore) {
+                alert('Firestore not available');
+                return;
+            }
+            await firestore.collection('ekyc').doc(activeUserId).update({
+                ekycStatus: 'verified',
+                verifiedAt: new Date().toISOString(),
+                verifiedBy: ADMIN_DEFAULT.id,
+                verifiedByEmail: ADMIN_DEFAULT.email
+            });
+            
+            if (activeRequestId) {
+                await firestore.collection('videoCallRequests').doc(activeRequestId).update({
+                    status: 'completed',
+                    ekycStatus: 'verified',
+                    completedAt: new Date().toISOString()
+                });
+            }
         }
         
         console.log('✓ eKYC approved successfully');
@@ -761,7 +1063,7 @@ async function approveEKYC() {
  * Reject eKYC
  */
 async function rejectEKYC() {
-    if (!activeUserId || !firestore) return;
+    if (!activeUserId) return;
     
     const reason = prompt('Please enter a reason for rejection:');
     if (!reason) return;
@@ -771,21 +1073,48 @@ async function rejectEKYC() {
     }
     
     try {
-        await firestore.collection('ekyc').doc(activeUserId).update({
-            ekycStatus: 'rejected',
-            rejectedAt: new Date().toISOString(),
-            rejectedBy: ADMIN_DEFAULT.id,
-            rejectedByEmail: ADMIN_DEFAULT.email,
-            rejectionReason: reason
-        });
-        
-        if (activeRequestId) {
-            await firestore.collection('videoCallRequests').doc(activeRequestId).update({
-                status: 'completed',
+        if (activeRequestType === 'importer') {
+            if (!importerDatabase) {
+                alert('Importer database not available');
+                return;
+            }
+            await importerDatabase.ref(`importers/${activeUserId}/ekyc`).update({
                 ekycStatus: 'rejected',
-                rejectionReason: reason,
-                completedAt: new Date().toISOString()
+                rejectedAt: new Date().toISOString(),
+                rejectedBy: ADMIN_DEFAULT.id,
+                rejectedByEmail: ADMIN_DEFAULT.email,
+                rejectionReason: reason
             });
+            
+            if (activeRequestId) {
+                await importerDatabase.ref(`importers/${activeUserId}/videoCallRequests/${activeRequestId}`).update({
+                    status: 'completed',
+                    ekycStatus: 'rejected',
+                    rejectionReason: reason,
+                    completedAt: new Date().toISOString()
+                });
+            }
+        } else {
+            if (!firestore) {
+                alert('Firestore not available');
+                return;
+            }
+            await firestore.collection('ekyc').doc(activeUserId).update({
+                ekycStatus: 'rejected',
+                rejectedAt: new Date().toISOString(),
+                rejectedBy: ADMIN_DEFAULT.id,
+                rejectedByEmail: ADMIN_DEFAULT.email,
+                rejectionReason: reason
+            });
+            
+            if (activeRequestId) {
+                await firestore.collection('videoCallRequests').doc(activeRequestId).update({
+                    status: 'completed',
+                    ekycStatus: 'rejected',
+                    rejectionReason: reason,
+                    completedAt: new Date().toISOString()
+                });
+            }
         }
         
         alert('eKYC rejected.');
@@ -806,6 +1135,12 @@ function refreshAdminPanel() {
     }
     if (videoCallRequestsListener) {
         videoCallRequestsListener();
+    }
+    if (importerVideoCallRequestsListener && importerDatabase) {
+        importerDatabase.ref('importers').off('value', importerVideoCallRequestsListener);
+    }
+    if (userOfferListener && activeRequestType === 'importer' && importerDatabase && activeUserId && activeRequestId) {
+        importerDatabase.ref(`importers/${activeUserId}/videoCallRequests/${activeRequestId}`).off('value', userOfferListener);
     }
     window.location.reload();
 }

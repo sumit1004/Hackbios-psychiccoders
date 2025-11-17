@@ -1,0 +1,23 @@
+// Firestore Security Rules for Admin Panel
+// Copy these rules to Firebase Console > Firestore Database > Rules
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow admin to read/write video call requests
+    match /videoCallRequests/{requestId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Allow admin to read/write eKYC data
+    match /ekyc/{userId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Default: deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+

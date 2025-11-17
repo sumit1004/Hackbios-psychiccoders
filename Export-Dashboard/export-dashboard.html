@@ -117,6 +117,27 @@
                             <span>Support</span>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a href="../marketplace/marketplace.html" class="nav-link" target="_blank">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 7h18"></path>
+                                <path d="M6 7V3h12v4"></path>
+                                <path d="M5 7l1.68 12.06A2 2 0 0 0 8.66 21h6.68a2 2 0 0 0 1.98-1.94L19 7"></path>
+                            </svg>
+                            <span>Marketplace</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#cart" class="nav-link" data-tab="cart">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                            <span>My Cart</span>
+                            <span class="nav-badge" id="exporterCartBadge" style="display: none;">0</span>
+                        </a>
+                    </li>
                 </ul>
             </nav>
         </aside>
@@ -769,6 +790,42 @@
                             </div>
                             <div class="support-faq-accordion" id="supportFaqList"></div>
                         </section>
+                    </div>
+                </div>
+
+                <div class="content-section" id="cartSection" style="display: none;">
+                    <div class="panel-card">
+                        <header>
+                            <div>
+                                <h2>Shopping Cart</h2>
+                                <p>Products you've added from the marketplace</p>
+                            </div>
+                            <a href="../marketplace/marketplace.html" target="_blank" class="btn-secondary">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 7h18"></path>
+                                    <path d="M6 7V3h12v4"></path>
+                                    <path d="M5 7l1.68 12.06A2 2 0 0 0 8.66 21h6.68a2 2 0 0 0 1.98-1.94L19 7"></path>
+                                </svg>
+                                Browse Marketplace
+                            </a>
+                        </header>
+                        <div id="exporterCartContent">
+                            <div class="cart-empty">
+                                <div class="empty-icon">🛒</div>
+                                <h3>Your cart is empty</h3>
+                                <p>Add products from the marketplace to see them here</p>
+                                <a href="../marketplace/marketplace.html" target="_blank" class="btn-primary" style="margin-top: 1rem; display: inline-block;">
+                                    Go to Marketplace
+                                </a>
+                            </div>
+                        </div>
+                        <div id="exporterCartFooter" style="display: none; margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e0e0e0;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                                <span style="font-size: 1.25rem; font-weight: 600;">Total:</span>
+                                <strong id="exporterCartTotal" style="font-size: 1.5rem; color: #667eea;">$0.00</strong>
+                            </div>
+                            <button class="btn-primary full-width" onclick="proceedExporterCheckout()">Proceed to Checkout</button>
+                        </div>
                     </div>
                 </div>
             </main>

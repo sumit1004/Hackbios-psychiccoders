@@ -176,9 +176,15 @@ function switchTab(tabName) {
             payments: 'Payments',
             documents: 'Documents',
             analytics: 'Analytics',
-            support: 'Support'
+            support: 'Support',
+            cart: 'My Cart'
         };
         pageTitle.textContent = titles[tabName] || 'Dashboard';
+    }
+
+    // Load cart if cart tab is selected
+    if (tabName === 'cart') {
+        loadExporterCart();
     }
 
     // Update URL hash
@@ -4981,7 +4987,232 @@ document.addEventListener('DOMContentLoaded', () => {
             loadAnalyticsFromFirebase();
         } else if (initialTab === 'support') {
             initializeSupportModule();
+        } else if (initialTab === 'cart') {
+            loadExporterCart();
         }
     }, 100);
+});
+
+// ============================================
+// CART MANAGEMENT
+// ============================================
+
+/**
+ * Load cart from Firebase
+ */
+async function loadExporterCart() {
+    const user = auth?.currentUser;
+    if (!user || !database) {
+        showEmptyCart();
+        return;
+    }
+
+    try {
+        const snapshot = await database.ref(`users/${user.uid}/cart`).once('value');
+        const cartData = snapshot.val();
+        
+        let cart = [];
+        if (cartData) {
+            if (Array.isArray(cartData)) {
+                cart = cartData;
+            } else {
+                cart = Object.values(cartData);
+            }
+        }
+
+        renderExporterCart(cart);
+        updateCartBadge(cart);
+    } catch (error) {
+        console.error('Error loading cart:', error);
+        showEmptyCart();
+    }
+}
+
+/**
+ * Render cart items
+ */
+function renderExporterCart(cart) {
+    const cartContent = document.getElementById('exporterCartContent');
+    const cartFooter = document.getElementById('exporterCartFooter');
+    const cartTotal = document.getElementById('exporterCartTotal');
+    const cartBadge = document.getElementById('exporterCartBadge');
+
+    if (!cartContent) return;
+
+    if (cart.length === 0) {
+        showEmptyCart();
+        if (cartFooter) cartFooter.style.display = 'none';
+        if (cartBadge) cartBadge.style.display = 'none';
+        return;
+    }
+
+    cartContent.innerHTML = cart.map(item => createCartItemHTML(item)).join('');
+    
+    if (cartFooter) cartFooter.style.display = 'block';
+    
+    // Calculate total
+    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const currency = cart[0]?.currency || 'USD';
+    if (cartTotal) {
+        cartTotal.textContent = `${currency} ${total.toLocaleString()}`;
+    }
+
+    // Update badge
+    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+    if (cartBadge) {
+        cartBadge.textContent = totalItems;
+        cartBadge.style.display = totalItems > 0 ? 'inline-block' : 'none';
+    }
+}
+
+/**
+ * Create cart item HTML
+ */
+function createCartItemHTML(item) {
+    const imageSrc = item.imageBase64 
+        ? `data:${item.imageFileType || 'image/jpeg'};base64,${item.imageBase64}`
+        : 'https://via.placeholder.com/100x100?text=No+Image';
+
+    return `
+        <div class="cart-item" style="display: flex; gap: 1rem; padding: 1rem; background: #f9f9f9; border-radius: 12px; margin-bottom: 1rem;">
+            <img src="${imageSrc}" alt="${item.name}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
+                <div style="font-weight: 600; color: #333; font-size: 1rem;">${item.name || 'Unnamed Product'}</div>
+                <div style="color: #667eea; font-weight: 600; font-size: 1.1rem;">${item.currency || 'USD'} ${(item.price * item.quantity).toLocaleString()}</div>
+                ${item.exporterName ? `<div style="color: #666; font-size: 0.9rem;">From: ${item.exporterName}</div>` : ''}
+                <div style="display: flex; align-items: center; gap: 1rem; margin-top: auto;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; background: white; border: 2px solid #e0e0e0; border-radius: 6px; padding: 0.25rem 0.5rem;">
+                        <button onclick="updateExporterCartQuantity('${item.id}', -1)" style="background: none; border: none; cursor: pointer; color: #667eea; font-weight: 600; padding: 0.25rem 0.5rem;">-</button>
+                        <span style="min-width: 30px; text-align: center;">${item.quantity}</span>
+                        <button onclick="updateExporterCartQuantity('${item.id}', 1)" style="background: none; border: none; cursor: pointer; color: #667eea; font-weight: 600; padding: 0.25rem 0.5rem;">+</button>
+                    </div>
+                    <button onclick="removeExporterCartItem('${item.id}')" style="background: #ff4757; color: white; border: none; border-radius: 6px; padding: 0.5rem 1rem; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">
+                        Remove
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Show empty cart
+ */
+function showEmptyCart() {
+    const cartContent = document.getElementById('exporterCartContent');
+    if (cartContent) {
+        cartContent.innerHTML = `
+            <div class="cart-empty" style="text-align: center; padding: 3rem 1rem; color: #666;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">🛒</div>
+                <h3 style="color: #333; margin-bottom: 0.5rem;">Your cart is empty</h3>
+                <p>Add products from the marketplace to see them here</p>
+                <a href="../marketplace/marketplace.html" target="_blank" class="btn-primary" style="margin-top: 1rem; display: inline-block;">
+                    Go to Marketplace
+                </a>
+            </div>
+        `;
+    }
+}
+
+/**
+ * Update cart quantity
+ */
+async function updateExporterCartQuantity(productId, change) {
+    const user = auth?.currentUser;
+    if (!user || !database) return;
+
+    try {
+        const snapshot = await database.ref(`users/${user.uid}/cart`).once('value');
+        const cartData = snapshot.val();
+        
+        let cart = [];
+        if (cartData) {
+            if (Array.isArray(cartData)) {
+                cart = cartData;
+            } else {
+                cart = Object.values(cartData);
+            }
+        }
+
+        const item = cart.find(item => item.id === productId);
+        if (!item) return;
+
+        item.quantity += change;
+        if (item.quantity <= 0) {
+            cart = cart.filter(item => item.id !== productId);
+        }
+
+        await database.ref(`users/${user.uid}/cart`).set(cart);
+        renderExporterCart(cart);
+        updateCartBadge(cart);
+    } catch (error) {
+        console.error('Error updating cart:', error);
+    }
+}
+
+/**
+ * Remove cart item
+ */
+async function removeExporterCartItem(productId) {
+    const user = auth?.currentUser;
+    if (!user || !database) return;
+
+    try {
+        const snapshot = await database.ref(`users/${user.uid}/cart`).once('value');
+        const cartData = snapshot.val();
+        
+        let cart = [];
+        if (cartData) {
+            if (Array.isArray(cartData)) {
+                cart = cartData;
+            } else {
+                cart = Object.values(cartData);
+            }
+        }
+
+        cart = cart.filter(item => item.id !== productId);
+        await database.ref(`users/${user.uid}/cart`).set(cart);
+        renderExporterCart(cart);
+        updateCartBadge(cart);
+    } catch (error) {
+        console.error('Error removing cart item:', error);
+    }
+}
+
+/**
+ * Update cart badge
+ */
+function updateCartBadge(cart) {
+    const cartBadge = document.getElementById('exporterCartBadge');
+    if (!cartBadge) return;
+
+    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+    cartBadge.textContent = totalItems;
+    cartBadge.style.display = totalItems > 0 ? 'inline-block' : 'none';
+}
+
+/**
+ * Proceed to checkout
+ */
+function proceedExporterCheckout() {
+    // For now, just show a message
+    alert('Checkout functionality will be implemented soon. Your cart items are saved and will be available for order processing.');
+}
+
+// Listen for cart updates from marketplace
+window.addEventListener('storage', (e) => {
+    if (e.key === 'cartUpdated') {
+        loadExporterCart();
+    }
+});
+
+// Also check cart on page visibility change (when user returns from marketplace)
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+        const currentTab = window.location.hash.substring(1);
+        if (currentTab === 'cart') {
+            loadExporterCart();
+        }
+    }
 });
 
