@@ -332,29 +332,60 @@ let adminSupportThreadsRef = null;
 let adminSupportMessagesRef = null;
 let adminCurrentSupportUserId = null;
 
-function initializeAdminSupportCenter() {
+async function initializeAdminSupportCenter() {
+    // Ensure authentication before initializing support features
+    if (auth && !auth.currentUser) {
+        try {
+            await auth.signInAnonymously();
+            console.log('Admin authenticated for support center');
+        } catch (err) {
+            console.warn('Anonymous auth failed, retrying...', err);
+            // Retry after delay
+            setTimeout(() => initializeAdminSupportCenter(), 2000);
+            return;
+        }
+    }
+    
     setupSupportStatusToggle();
     setupAdminSupportForm();
     listenForSupportThreads();
 }
 
-function setupSupportStatusToggle() {
+async function setupSupportStatusToggle() {
     if (!database) return;
     const toggle = document.getElementById('adminSupportToggle');
     const label = document.getElementById('adminSupportStatusLabel');
     if (!toggle || !label) return;
 
-    // Try to authenticate first
+    // Ensure authentication before proceeding
     if (auth && !auth.currentUser) {
-        auth.signInAnonymously().catch(err => {
+        try {
+            await auth.signInAnonymously();
+            console.log('Admin authenticated for support status');
+        } catch (err) {
             console.warn('Anonymous auth for support status failed:', err);
-        });
+            // Retry after a delay
+            setTimeout(() => setupSupportStatusToggle(), 2000);
+            return;
+        }
     }
 
     const statusRef = database.ref('supportStatus/admin');
 
     toggle.addEventListener('change', async () => {
         const status = toggle.checked ? 'online' : 'offline';
+        
+        // Ensure auth before updating
+        if (auth && !auth.currentUser) {
+            try {
+                await auth.signInAnonymously();
+            } catch (err) {
+                console.error('Auth failed during status update:', err);
+                toggle.checked = !toggle.checked; // revert
+                return;
+            }
+        }
+        
         try {
             await statusRef.update({
                 status,
@@ -365,7 +396,28 @@ function setupSupportStatusToggle() {
         } catch (error) {
             console.error('Unable to update support status:', error);
             if (error.code === 'PERMISSION_DENIED' || error.code === 'permission_denied') {
-                alert('Permission denied. Please configure Realtime Database security rules to allow admin access to /supportStatus/admin');
+                // Try to authenticate and retry
+                if (auth && !auth.currentUser) {
+                    try {
+                        await auth.signInAnonymously();
+                        // Retry the update
+                        try {
+                            await statusRef.update({
+                                status,
+                                updatedAt: firebase.database.ServerValue.TIMESTAMP
+                            });
+                            label.textContent = status === 'online' ? 'Online' : 'Offline';
+                            setAdminSupportFormState(toggle.checked && Boolean(adminCurrentSupportUserId));
+                            return;
+                        } catch (retryError) {
+                            console.error('Retry after auth also failed:', retryError);
+                        }
+                    } catch (authError) {
+                        console.error('Auth retry failed:', authError);
+                    }
+                }
+                label.textContent = 'Permission Error';
+                alert('Permission denied. Please ensure Firebase Anonymous Authentication is enabled in Firebase Console > Authentication > Sign-in method.');
             }
             toggle.checked = !toggle.checked; // revert
         }
@@ -376,33 +428,76 @@ function setupSupportStatusToggle() {
     }
 
     const handleStatusSnapshot = (snapshot) => {
+        if (!snapshot.exists()) {
+            // Initialize with default offline status
+            if (auth && auth.currentUser) {
+                statusRef.set({
+                    status: 'offline',
+                    updatedAt: firebase.database.ServerValue.TIMESTAMP
+                }).catch(err => console.warn('Could not initialize support status:', err));
+            }
+            return;
+        }
         const data = snapshot.val() || {};
-            const isOnline = data.status === 'online';
-            toggle.checked = isOnline;
-            label.textContent = isOnline ? 'Online' : 'Offline';
-            setAdminSupportFormState(isOnline && Boolean(adminCurrentSupportUserId));
+        const isOnline = data.status === 'online';
+        toggle.checked = isOnline;
+        label.textContent = isOnline ? 'Online' : 'Offline';
+        setAdminSupportFormState(isOnline && Boolean(adminCurrentSupportUserId));
     };
 
-    statusRef.on('value', handleStatusSnapshot, (error) => {
+    const handleError = (error) => {
         console.error('Support status listener error:', error);
         if (error.code === 'PERMISSION_DENIED' || error.code === 'permission_denied') {
-            console.warn('Permission denied for support status. Please configure Realtime Database security rules.');
-            label.textContent = 'Permission Error';
+            console.warn('Permission denied for support status. Attempting to authenticate...');
+            label.textContent = 'Authenticating...';
+            
+            // Try to authenticate and retry
+            if (auth && !auth.currentUser) {
+                auth.signInAnonymously()
+                    .then(() => {
+                        console.log('Authenticated, retrying listener...');
+                        // Retry setting up the listener
+                        setTimeout(() => setupSupportStatusToggle(), 1000);
+                    })
+                    .catch((authErr) => {
+                        console.error('Authentication failed:', authErr);
+                        label.textContent = 'Auth Required';
+                        console.warn('Please enable Anonymous Authentication in Firebase Console > Authentication > Sign-in method');
+                    });
+            } else {
+                label.textContent = 'Permission Error';
+            }
         }
-    });
+    };
+
+    statusRef.on('value', handleStatusSnapshot, handleError);
 
     adminSupportStatusUnsub = () => statusRef.off('value', handleStatusSnapshot);
 }
 
-function listenForSupportThreads() {
+async function listenForSupportThreads() {
     if (!database) return;
     const listEl = document.getElementById('adminSupportThreadList');
     if (!listEl) return;
 
+    // Ensure authentication before proceeding
+    if (auth && !auth.currentUser) {
+        try {
+            await auth.signInAnonymously();
+            console.log('Admin authenticated for support threads');
+        } catch (err) {
+            console.warn('Anonymous auth for support threads failed:', err);
+            // Retry after a delay
+            setTimeout(() => listenForSupportThreads(), 2000);
+            return;
+        }
+    }
+
     if (adminSupportThreadsRef) adminSupportThreadsRef.off();
 
     adminSupportThreadsRef = database.ref('supportChat');
-    adminSupportThreadsRef.on('value', (snapshot) => {
+    
+    const handleSnapshot = (snapshot) => {
         if (!snapshot.exists()) {
             listEl.innerHTML = '<div class="empty-state">No support conversations yet</div>';
             return;
@@ -440,7 +535,32 @@ function listenForSupportThreads() {
                 selectSupportThread(item.getAttribute('data-user-id'));
             });
         });
-    });
+    };
+
+    const handleError = (error) => {
+        console.error('Support threads listener error:', error);
+        if (error.code === 'PERMISSION_DENIED' || error.code === 'permission_denied') {
+            console.warn('Permission denied for support threads. Attempting to authenticate...');
+            listEl.innerHTML = '<div class="empty-state">Authenticating...</div>';
+            
+            // Try to authenticate and retry
+            if (auth && !auth.currentUser) {
+                auth.signInAnonymously()
+                    .then(() => {
+                        console.log('Authenticated, retrying support threads listener...');
+                        setTimeout(() => listenForSupportThreads(), 1000);
+                    })
+                    .catch((authErr) => {
+                        console.error('Authentication failed:', authErr);
+                        listEl.innerHTML = '<div class="empty-state">Auth Required - Please enable Anonymous Authentication</div>';
+                    });
+            } else {
+                listEl.innerHTML = '<div class="empty-state">Permission Error</div>';
+            }
+        }
+    };
+
+    adminSupportThreadsRef.on('value', handleSnapshot, handleError);
 }
 
 function selectSupportThread(userId) {
