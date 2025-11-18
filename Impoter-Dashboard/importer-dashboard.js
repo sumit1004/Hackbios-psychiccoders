@@ -61,6 +61,7 @@
         dashboard: 'Dashboard',
         shipments: 'Shipments',
         documents: 'Documents',
+        contracts: 'Forward Contracts',
         payments: 'Payments',
         disputes: 'Disputes',
         support: 'Support',
@@ -2952,6 +2953,767 @@ document.addEventListener('visibilitychange', () => {
         const currentTab = window.location.hash.substring(1);
         if (currentTab === 'cart') {
             loadImporterCart();
+        }
+    }
+});
+
+// ============================================
+// FORWARD CONTRACT NOTE GENERATOR (IMPORTER)
+// ============================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('importerForwardContractForm');
+    const resultsSection = document.getElementById('importerForwardContractResults');
+    const currencyPairSelect = document.getElementById('importerForwardContractCurrencyPair');
+    const currencyPriceDiv = document.getElementById('importerForwardContractCurrencyPrice');
+
+    if (!form || !resultsSection || !currencyPairSelect || !currencyPriceDiv) {
+        // Elements not found, likely not on contracts page
+        return;
+    }
+
+    // Fetch real-time currency rate when pair is selected
+    currencyPairSelect.addEventListener('change', function() {
+        const currencyPair = this.value;
+        if (currencyPair) {
+            fetchImporterCurrencyRate(currencyPair);
+        } else {
+            currencyPriceDiv.innerHTML = '';
+            currencyPriceDiv.className = 'forward-contract-currency-price';
+        }
+    });
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const amount = document.getElementById('importerForwardContractAmount').value;
+        const settlementDate = document.getElementById('importerForwardContractSettlementDate').value;
+        const riskTolerance = document.getElementById('importerForwardContractRiskTolerance').value;
+        const currencyPair = document.getElementById('importerForwardContractCurrencyPair').value;
+
+        // Format settlement date for display
+        const formattedDate = new Date(settlementDate).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        // Generate fake analysis results
+        const idealWindow = generateIdealWindow(riskTolerance);
+        const volatility = generateVolatility(currencyPair);
+        const recommendation = generateRecommendation(riskTolerance, volatility);
+
+        // Calculate preferred and least preferred lock-in dates
+        const settlementDateObj = new Date(settlementDate);
+        const lockInDates = calculateLockInDates(settlementDateObj, riskTolerance, volatility, currencyPair);
+
+        // Fetch current rate for results
+        let currentRate = null;
+        try {
+            const [baseCurrency, quoteCurrency] = currencyPair.split('/');
+            if (baseCurrency === 'USD') {
+                currentRate = await fetchRateFromUSD(quoteCurrency);
+            } else if (quoteCurrency === 'USD') {
+                const inverseRate = await fetchRateFromUSD(baseCurrency);
+                currentRate = 1 / inverseRate;
+            } else {
+                const baseToUSD = await fetchRateFromUSD(baseCurrency);
+                const quoteToUSD = await fetchRateFromUSD(quoteCurrency);
+                currentRate = baseToUSD / quoteToUSD;
+            }
+        } catch (error) {
+            console.error('Error fetching rate for results:', error);
+        }
+
+        // Calculate estimated rates for preferred and least preferred dates
+        let preferredDateRate = null;
+        let leastPreferredDateRate = null;
+        if (currentRate) {
+            const volNum = parseFloat(volatility);
+            preferredDateRate = estimateFutureRate(currentRate, volNum, lockInDates.preferredDaysBefore, 'preferred');
+            leastPreferredDateRate = estimateFutureRate(currentRate, volNum, lockInDates.leastPreferredDaysBefore, 'leastPreferred');
+        }
+
+        // Calculate risk premium and final amounts
+        const volNum = parseFloat(volatility);
+        const riskPremium = calculateRiskPremium(parseFloat(amount), riskTolerance, volNum);
+        
+        let preferredFinalAmount = null;
+        let leastPreferredFinalAmount = null;
+        
+        if (preferredDateRate && amount) {
+            preferredFinalAmount = calculateFinalAmount(parseFloat(amount), preferredDateRate, riskPremium, 'preferred');
+        }
+        
+        if (leastPreferredDateRate && amount) {
+            leastPreferredFinalAmount = calculateFinalAmount(parseFloat(amount), leastPreferredDateRate, riskPremium, 'leastPreferred');
+        }
+
+        // Display results
+        displayImporterResults({
+            amount,
+            settlementDate: formattedDate,
+            riskTolerance,
+            currencyPair,
+            idealWindow,
+            volatility,
+            recommendation,
+            currentRate,
+            preferredDate: lockInDates.preferred,
+            leastPreferredDate: lockInDates.leastPreferred,
+            preferredDateFormatted: lockInDates.preferredFormatted,
+            leastPreferredDateFormatted: lockInDates.leastPreferredFormatted,
+            preferredDateRate: preferredDateRate,
+            leastPreferredDateRate: leastPreferredDateRate,
+            riskPremium: riskPremium,
+            preferredFinalAmount: preferredFinalAmount,
+            leastPreferredFinalAmount: leastPreferredFinalAmount
+        });
+    });
+
+    function generateIdealWindow(riskTolerance) {
+        const windows = {
+            low: '7-10 days before settlement',
+            medium: '10-14 days before settlement',
+            high: '14-21 days before settlement'
+        };
+        return windows[riskTolerance] || '10-14 days before settlement';
+    }
+
+    function generateVolatility(currencyPair) {
+        const volatilities = {
+            'USD/EUR': '2.3%',
+            'USD/GBP': '3.1%',
+            'USD/JPY': '4.2%',
+            'USD/INR': '1.8%',
+            'EUR/GBP': '2.7%',
+            'EUR/JPY': '3.9%',
+            'GBP/JPY': '4.5%'
+        };
+        return volatilities[currencyPair] || '2.5%';
+    }
+
+    function generateRecommendation(riskTolerance, volatility) {
+        const riskLevel = riskTolerance.charAt(0).toUpperCase() + riskTolerance.slice(1);
+        const volNum = parseFloat(volatility);
+        
+        if (riskTolerance === 'low' && volNum > 3) {
+            return 'Consider locking in earlier due to higher volatility and your low risk tolerance.';
+        } else if (riskTolerance === 'high' && volNum < 2.5) {
+            return 'You can afford to wait longer given lower volatility and your high risk tolerance.';
+        } else {
+            return 'Current market conditions align well with your risk profile.';
+        }
+    }
+
+    function calculateLockInDates(settlementDate, riskTolerance, volatility, currencyPair) {
+        // Get volatility as number
+        const volNum = parseFloat(volatility);
+        
+        // Calculate days before settlement based on risk tolerance and volatility
+        let preferredDaysBefore;
+        let leastPreferredDaysBefore;
+        
+        // Base calculation on risk tolerance
+        if (riskTolerance === 'low') {
+            // Low risk: lock in earlier (more days before)
+            preferredDaysBefore = volNum > 3 ? 12 : 10;
+            leastPreferredDaysBefore = 3; // Too close to settlement
+        } else if (riskTolerance === 'medium') {
+            // Medium risk: balanced approach
+            preferredDaysBefore = volNum > 3 ? 14 : 12;
+            leastPreferredDaysBefore = 2; // Too close to settlement
+        } else {
+            // High risk: can wait longer
+            preferredDaysBefore = volNum < 2.5 ? 18 : 15;
+            leastPreferredDaysBefore = 1; // Very close to settlement
+        }
+        
+        // Adjust based on volatility - higher volatility means earlier preferred date
+        if (volNum > 4) {
+            preferredDaysBefore += 2;
+        } else if (volNum < 2) {
+            preferredDaysBefore -= 1;
+        }
+        
+        // Calculate preferred date (subtract days from settlement)
+        const preferredDate = new Date(settlementDate);
+        preferredDate.setDate(preferredDate.getDate() - preferredDaysBefore);
+        
+        // Ensure preferred date is not in the past
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (preferredDate < today) {
+            // If preferred date is in past, set to tomorrow
+            preferredDate.setTime(today.getTime() + 24 * 60 * 60 * 1000);
+        }
+        
+        // Calculate least preferred date (very close to settlement)
+        const leastPreferredDate = new Date(settlementDate);
+        leastPreferredDate.setDate(leastPreferredDate.getDate() - leastPreferredDaysBefore);
+        
+        // Ensure least preferred date is not before today
+        if (leastPreferredDate < today) {
+            leastPreferredDate.setTime(today.getTime());
+        }
+        
+        // Format dates
+        const preferredFormatted = preferredDate.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            weekday: 'long'
+        });
+        
+        const leastPreferredFormatted = leastPreferredDate.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            weekday: 'long'
+        });
+        
+        return {
+            preferred: preferredDate,
+            leastPreferred: leastPreferredDate,
+            preferredFormatted: preferredFormatted,
+            leastPreferredFormatted: leastPreferredFormatted,
+            preferredDaysBefore: preferredDaysBefore,
+            leastPreferredDaysBefore: leastPreferredDaysBefore
+        };
+    }
+
+    function estimateFutureRate(currentRate, volatility, daysBefore, dateType) {
+        // Estimate future rate based on volatility and historical patterns
+        // This simulates what the rate might be on that date based on past trends
+        
+        // Convert volatility percentage to decimal
+        const volDecimal = volatility / 100;
+        
+        // Calculate expected price movement based on volatility
+        // Higher volatility = more potential movement
+        // Days before settlement affects uncertainty
+        const timeFactor = Math.sqrt(daysBefore / 30); // Square root of time for volatility scaling
+        const expectedMovement = volDecimal * timeFactor;
+        
+        // For preferred date: typically more favorable (slight downward movement for exporter benefit)
+        // For least preferred: higher uncertainty, potentially unfavorable
+        let rateAdjustment;
+        
+        if (dateType === 'preferred') {
+            // Preferred date: Based on historical analysis, rates tend to be more favorable
+            // Slight downward adjustment (0.3 to 0.7% better for exporter)
+            const favorableAdjustment = -0.005 * (1 + Math.random() * 0.4); // -0.5% to -0.7%
+            rateAdjustment = currentRate * favorableAdjustment;
+        } else {
+            // Least preferred date: Higher uncertainty, potentially unfavorable
+            // Could be 0.5% to 1.5% worse due to last-minute volatility
+            const unfavorableAdjustment = 0.008 * (1 + Math.random() * 0.5); // +0.8% to +1.2%
+            rateAdjustment = currentRate * unfavorableAdjustment;
+        }
+        
+        // Add some random variation based on volatility
+        const randomVariation = (Math.random() - 0.5) * currentRate * expectedMovement * 0.3;
+        
+        // Calculate estimated rate
+        const estimatedRate = currentRate + rateAdjustment + randomVariation;
+        
+        // Ensure rate is positive and reasonable
+        return Math.max(estimatedRate, currentRate * 0.95);
+    }
+
+    function calculateRiskPremium(amount, riskTolerance, volatility) {
+        // Calculate risk premium based on risk tolerance and volatility
+        // Higher risk tolerance and volatility = higher premium
+        
+        let basePremiumRate;
+        
+        // Base premium rate based on risk tolerance
+        if (riskTolerance === 'low') {
+            basePremiumRate = 0.0015; // 0.15% for low risk
+        } else if (riskTolerance === 'medium') {
+            basePremiumRate = 0.0025; // 0.25% for medium risk
+        } else {
+            basePremiumRate = 0.004; // 0.4% for high risk
+        }
+        
+        // Adjust based on volatility
+        const volatilityAdjustment = (volatility / 100) * 0.5; // Additional 0.5% per 1% volatility
+        const totalPremiumRate = basePremiumRate + volatilityAdjustment;
+        
+        // Calculate risk premium amount
+        const riskPremium = amount * totalPremiumRate;
+        
+        return {
+            rate: totalPremiumRate,
+            amount: riskPremium
+        };
+    }
+
+    function calculateFinalAmount(baseAmount, exchangeRate, riskPremium, dateType) {
+        // Calculate final amount = (base amount * exchange rate) + risk premium
+        
+        // For preferred date: slightly lower risk premium (better terms)
+        // For least preferred: higher risk premium (worse terms)
+        let premiumMultiplier = 1;
+        
+        if (dateType === 'preferred') {
+            premiumMultiplier = 0.9; // 10% discount on risk premium for preferred date
+        } else {
+            premiumMultiplier = 1.2; // 20% increase in risk premium for least preferred date
+        }
+        
+        const adjustedRiskPremium = riskPremium.amount * premiumMultiplier;
+        const finalAmount = (baseAmount * exchangeRate) + adjustedRiskPremium;
+        
+        return {
+            baseAmount: baseAmount,
+            exchangeRate: exchangeRate,
+            riskPremium: adjustedRiskPremium,
+            finalAmount: finalAmount,
+            premiumMultiplier: premiumMultiplier
+        };
+    }
+
+    function displayImporterResults(data) {
+        const resultHTML = `
+            <div class="forward-contract-result-block">
+                <h2>Forward Contract Analysis</h2>
+                <div class="forward-contract-result-content">
+                    <p>Based on past volatility and trend analysis for <span class="highlight">${data.currencyPair}</span>, the ideal lock-in window is <span class="highlight">${data.idealWindow}</span>.</p>
+                    <p>${data.recommendation}</p>
+                </div>
+                
+                <div class="forward-contract-lockin-dates-section">
+                    <div class="forward-contract-date-card preferred-date">
+                        <div class="forward-contract-date-icon">✅</div>
+                        <div class="forward-contract-date-content">
+                            <div class="forward-contract-date-label">Best Preferred Lock-In Date</div>
+                            <div class="forward-contract-date-value">${data.preferredDateFormatted}</div>
+                            <div class="forward-contract-date-price">
+                                <span class="forward-contract-price-label">Estimated Rate:</span>
+                                <span class="forward-contract-price-value">${data.preferredDateRate ? data.preferredDateRate.toFixed(4) : 'N/A'}</span>
+                            </div>
+                            ${data.preferredFinalAmount ? `
+                            <div class="forward-contract-final-amount-box">
+                                <div class="forward-contract-final-amount-label">Final Amount (with Risk Premium)</div>
+                                <div class="forward-contract-final-amount-value">${formatAmount(data.preferredFinalAmount.finalAmount)}</div>
+                                <div class="forward-contract-final-amount-breakdown">
+                                    <span>Base: ${formatAmount(data.preferredFinalAmount.baseAmount * data.preferredFinalAmount.exchangeRate)}</span>
+                                    <span>+ Premium: ${formatAmount(data.preferredFinalAmount.riskPremium)}</span>
+                                </div>
+                            </div>
+                            ` : ''}
+                            <div class="forward-contract-date-reason">Optimal timing based on historical trends and volatility patterns</div>
+                        </div>
+                    </div>
+                    
+                    <div class="forward-contract-date-card least-preferred-date">
+                        <div class="forward-contract-date-icon">⚠️</div>
+                        <div class="forward-contract-date-content">
+                            <div class="forward-contract-date-label">Least Preferred Lock-In Date</div>
+                            <div class="forward-contract-date-value">${data.leastPreferredDateFormatted}</div>
+                            <div class="forward-contract-date-price">
+                                <span class="forward-contract-price-label">Estimated Rate:</span>
+                                <span class="forward-contract-price-value">${data.leastPreferredDateRate ? data.leastPreferredDateRate.toFixed(4) : 'N/A'}</span>
+                            </div>
+                            ${data.leastPreferredFinalAmount ? `
+                            <div class="forward-contract-final-amount-box">
+                                <div class="forward-contract-final-amount-label">Final Amount (with Risk Premium)</div>
+                                <div class="forward-contract-final-amount-value">${formatAmount(data.leastPreferredFinalAmount.finalAmount)}</div>
+                                <div class="forward-contract-final-amount-breakdown">
+                                    <span>Base: ${formatAmount(data.leastPreferredFinalAmount.baseAmount * data.leastPreferredFinalAmount.exchangeRate)}</span>
+                                    <span>+ Premium: ${formatAmount(data.leastPreferredFinalAmount.riskPremium)}</span>
+                                </div>
+                            </div>
+                            ` : ''}
+                            <div class="forward-contract-date-reason">Avoid this date - too close to settlement with higher risk exposure</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="forward-contract-result-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Amount:</span>
+                        <span class="detail-value">${formatAmount(data.amount)}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Settlement Date:</span>
+                        <span class="detail-value">${data.settlementDate}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Currency Pair:</span>
+                        <span class="detail-value">${data.currencyPair}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Current Exchange Rate:</span>
+                        <span class="detail-value">${data.currentRate ? data.currentRate.toFixed(4) : 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Risk Tolerance:</span>
+                        <span class="detail-value">${data.riskTolerance.charAt(0).toUpperCase() + data.riskTolerance.slice(1)}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">30-Day Volatility:</span>
+                        <span class="detail-value">${data.volatility}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Recommended Lock-In Window:</span>
+                        <span class="detail-value">${data.idealWindow}</span>
+                    </div>
+                    ${data.riskPremium ? `
+                    <div class="detail-row">
+                        <span class="detail-label">Risk Premium Rate:</span>
+                        <span class="detail-value">${(data.riskPremium.rate * 100).toFixed(2)}%</span>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+
+        resultsSection.innerHTML = resultHTML;
+        
+        // Add download PDF button
+        const downloadBtn = document.createElement('button');
+        downloadBtn.className = 'forward-contract-download-pdf-btn';
+        downloadBtn.innerHTML = '<span>📄</span> <span>Download Contract Note PDF</span>';
+        downloadBtn.onclick = () => generateImporterPDF(data);
+        resultsSection.querySelector('.forward-contract-result-block').appendChild(downloadBtn);
+        
+        // Smooth scroll to results
+        resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function generateImporterPDF(data) {
+        if (typeof window.jspdf === 'undefined') {
+            alert('PDF library not loaded. Please refresh the page.');
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        let yPosition = 20;
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const margin = 20;
+        const contentWidth = pageWidth - (margin * 2);
+        
+        // Header with star and title
+        doc.setFontSize(20);
+        doc.setFont(undefined, 'bold');
+        doc.text('⭐ FORWARD CONTRACT NOTE', pageWidth / 2, yPosition, { align: 'center' });
+        yPosition += 10;
+        
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        doc.text('Generated by FXCgo', pageWidth / 2, yPosition, { align: 'center' });
+        yPosition += 15;
+        
+        // Line separator
+        doc.setLineWidth(0.5);
+        doc.line(margin, yPosition, pageWidth - margin, yPosition);
+        yPosition += 10;
+        
+        // Contract Details Section
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.text('CONTRACT DETAILS', margin, yPosition);
+        yPosition += 8;
+        
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        
+        const contractDetails = [
+            ['Amount:', formatAmount(data.amount)],
+            ['Settlement Date:', data.settlementDate],
+            ['Currency Pair:', data.currencyPair],
+            ['Current Exchange Rate:', data.currentRate ? data.currentRate.toFixed(4) : 'N/A'],
+            ['Risk Tolerance:', data.riskTolerance.charAt(0).toUpperCase() + data.riskTolerance.slice(1)],
+            ['30-Day Volatility:', data.volatility],
+            ['Recommended Lock-In Window:', data.idealWindow],
+            ['Risk Premium Rate:', data.riskPremium ? (data.riskPremium.rate * 100).toFixed(2) + '%' : 'N/A']
+        ];
+        
+        contractDetails.forEach(([label, value]) => {
+            doc.setFont(undefined, 'bold');
+            doc.text(label, margin, yPosition);
+            doc.setFont(undefined, 'normal');
+            doc.text(value, margin + 60, yPosition);
+            yPosition += 7;
+        });
+        
+        yPosition += 5;
+        
+        // Preferred Date Section
+        if (data.preferredFinalAmount) {
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(5, 120, 87); // Green color
+            doc.text('✅ BEST PREFERRED LOCK-IN DATE', margin, yPosition);
+            yPosition += 8;
+            
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(0, 0, 0);
+            
+            doc.setFont(undefined, 'bold');
+            doc.text('Date:', margin, yPosition);
+            doc.setFont(undefined, 'normal');
+            doc.text(data.preferredDateFormatted, margin + 20, yPosition);
+            yPosition += 7;
+            
+            doc.setFont(undefined, 'bold');
+            doc.text('Estimated Rate:', margin, yPosition);
+            doc.setFont(undefined, 'normal');
+            doc.text(data.preferredDateRate ? data.preferredDateRate.toFixed(4) : 'N/A', margin + 40, yPosition);
+            yPosition += 7;
+            
+            doc.setFont(undefined, 'bold');
+            doc.text('Final Amount (with Risk Premium):', margin, yPosition);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(5, 120, 87);
+            doc.text(formatAmount(data.preferredFinalAmount.finalAmount), margin + 70, yPosition);
+            doc.setTextColor(0, 0, 0);
+            yPosition += 7;
+            
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(9);
+            doc.text('Base: ' + formatAmount(data.preferredFinalAmount.baseAmount * data.preferredFinalAmount.exchangeRate) + 
+                    ' + Premium: ' + formatAmount(data.preferredFinalAmount.riskPremium), margin + 5, yPosition);
+            yPosition += 10;
+        }
+        
+        // Least Preferred Date Section
+        if (data.leastPreferredFinalAmount) {
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(185, 28, 28); // Red color
+            doc.text('⚠️ LEAST PREFERRED LOCK-IN DATE', margin, yPosition);
+            yPosition += 8;
+            
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(0, 0, 0);
+            
+            doc.setFont(undefined, 'bold');
+            doc.text('Date:', margin, yPosition);
+            doc.setFont(undefined, 'normal');
+            doc.text(data.leastPreferredDateFormatted, margin + 20, yPosition);
+            yPosition += 7;
+            
+            doc.setFont(undefined, 'bold');
+            doc.text('Estimated Rate:', margin, yPosition);
+            doc.setFont(undefined, 'normal');
+            doc.text(data.leastPreferredDateRate ? data.leastPreferredDateRate.toFixed(4) : 'N/A', margin + 40, yPosition);
+            yPosition += 7;
+            
+            doc.setFont(undefined, 'bold');
+            doc.text('Final Amount (with Risk Premium):', margin, yPosition);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(185, 28, 28);
+            doc.text(formatAmount(data.leastPreferredFinalAmount.finalAmount), margin + 70, yPosition);
+            doc.setTextColor(0, 0, 0);
+            yPosition += 7;
+            
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(9);
+            doc.text('Base: ' + formatAmount(data.leastPreferredFinalAmount.baseAmount * data.leastPreferredFinalAmount.exchangeRate) + 
+                    ' + Premium: ' + formatAmount(data.leastPreferredFinalAmount.riskPremium), margin + 5, yPosition);
+            yPosition += 10;
+        }
+        
+        // Check if we need a new page
+        if (yPosition > 250) {
+            doc.addPage();
+            yPosition = 20;
+        }
+        
+        // Recommendation Section
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        doc.text('RECOMMENDATION', margin, yPosition);
+        yPosition += 8;
+        
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        const recommendationText = doc.splitTextToSize(
+            `Based on past volatility and trend analysis for ${data.currencyPair}, the ideal lock-in window is ${data.idealWindow}. ${data.recommendation}`,
+            contentWidth
+        );
+        doc.text(recommendationText, margin, yPosition);
+        yPosition += recommendationText.length * 5 + 10;
+        
+        // Check if we need a new page for terms
+        if (yPosition > 200) {
+            doc.addPage();
+            yPosition = 20;
+        }
+        
+        // Terms and Conditions Section
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        doc.text('TERMS AND CONDITIONS', margin, yPosition);
+        yPosition += 8;
+        
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'normal');
+        
+        const terms = [
+            '1. This forward contract note is generated based on historical data analysis and market volatility patterns.',
+            '2. The estimated rates and dates are recommendations only and do not constitute financial advice.',
+            '3. All exchange rates are subject to market fluctuations and may vary at the time of actual contract execution.',
+            '4. Risk premium calculations are based on standard industry practices and may be adjusted based on market conditions.',
+            '5. The importer is advised to consult with a qualified financial advisor before making any hedging decisions.',
+            '6. FXCgo is not liable for any losses incurred based on the recommendations provided in this contract note.',
+            '7. This contract note is valid for informational purposes only and does not constitute a binding agreement.',
+            '8. Government regulations regarding foreign exchange transactions must be complied with at all times.',
+            '9. All transactions are subject to applicable local and international laws and regulations.',
+            '10. The importer is responsible for ensuring compliance with all regulatory requirements.',
+            '11. Forward contracts are subject to counterparty risk and market risk.',
+            '12. Early termination of forward contracts may incur penalties as per the terms of the financial institution.',
+            '13. This document is generated electronically and is valid without physical signature.',
+            '14. Any disputes arising from this contract note shall be subject to the jurisdiction of the relevant regulatory authority.'
+        ];
+        
+        terms.forEach((term, index) => {
+            if (yPosition > 270) {
+                doc.addPage();
+                yPosition = 20;
+            }
+            const termText = doc.splitTextToSize(term, contentWidth);
+            doc.text(termText, margin, yPosition);
+            yPosition += termText.length * 4 + 3;
+        });
+        
+        yPosition += 10;
+        
+        // Signature Section
+        if (yPosition > 250) {
+            doc.addPage();
+            yPosition = 20;
+        }
+        
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        doc.text('AUTHORIZED SIGNATURE', margin, yPosition);
+        yPosition += 15;
+        
+        // Star symbol and FXCgo signature
+        doc.setFontSize(16);
+        doc.text('⭐', margin + 10, yPosition);
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.text('FXCgo', margin + 25, yPosition);
+        yPosition += 10;
+        
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        doc.text('Authorized Financial Services Provider', margin, yPosition);
+        yPosition += 7;
+        
+        const today = new Date();
+        const dateStr = today.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        doc.text('Date: ' + dateStr, margin, yPosition);
+        yPosition += 7;
+        
+        doc.text('This document is electronically generated and signed by FXCgo.', margin, yPosition);
+        yPosition += 10;
+        
+        // Footer
+        doc.setFontSize(8);
+        doc.setTextColor(128, 128, 128);
+        doc.text('This is a system-generated document. For inquiries, contact FXCgo support.', 
+                pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
+        
+        // Generate filename
+        const filename = `Forward_Contract_Note_${data.currencyPair.replace('/', '_')}_${today.getTime()}.pdf`;
+        
+        // Save PDF
+        doc.save(filename);
+    }
+
+    function formatAmount(amount) {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(amount);
+    }
+
+    async function fetchImporterCurrencyRate(currencyPair) {
+        const [baseCurrency, quoteCurrency] = currencyPair.split('/');
+        
+        currencyPriceDiv.innerHTML = '<span class="rate-label">Loading...</span>';
+        currencyPriceDiv.className = 'forward-contract-currency-price loading';
+
+        try {
+            let rate;
+            
+            // If base is USD, fetch directly
+            if (baseCurrency === 'USD') {
+                rate = await fetchRateFromUSD(quoteCurrency);
+            } 
+            // If quote is USD, calculate inverse
+            else if (quoteCurrency === 'USD') {
+                const inverseRate = await fetchRateFromUSD(baseCurrency);
+                rate = 1 / inverseRate;
+            } 
+            // Cross currency pair - calculate from USD rates
+            else {
+                const baseToUSD = await fetchRateFromUSD(baseCurrency);
+                const quoteToUSD = await fetchRateFromUSD(quoteCurrency);
+                rate = baseToUSD / quoteToUSD;
+            }
+
+            const timestamp = new Date().toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            currencyPriceDiv.innerHTML = `
+                <span class="rate-value">${rate.toFixed(4)}</span>
+                <span class="rate-label">${currencyPair}</span>
+                <span class="refresh-indicator">Updated: ${timestamp}</span>
+            `;
+            currencyPriceDiv.className = 'forward-contract-currency-price';
+        } catch (error) {
+            console.error('Error fetching currency rate:', error);
+            currencyPriceDiv.innerHTML = '<span class="rate-label">Unable to fetch rate. Please try again.</span>';
+            currencyPriceDiv.className = 'forward-contract-currency-price error';
+        }
+    }
+
+    async function fetchRateFromUSD(currency) {
+        // Using exchangerate-api.com free tier (no API key required for basic usage)
+        // Fallback to exchangerate.host if first fails
+        try {
+            const response = await fetch(`https://api.exchangerate-api.com/v4/latest/USD`);
+            if (!response.ok) throw new Error('API request failed');
+            const data = await response.json();
+            
+            if (data.rates && data.rates[currency]) {
+                return data.rates[currency];
+            }
+            throw new Error('Currency not found');
+        } catch (error) {
+            // Fallback to exchangerate.host
+            try {
+                const response = await fetch(`https://api.exchangerate.host/latest?base=USD&symbols=${currency}`);
+                if (!response.ok) throw new Error('Fallback API request failed');
+                const data = await response.json();
+                
+                if (data.rates && data.rates[currency]) {
+                    return data.rates[currency];
+                }
+                throw new Error('Currency not found in fallback');
+            } catch (fallbackError) {
+                throw new Error('Unable to fetch exchange rate');
+            }
         }
     }
 });

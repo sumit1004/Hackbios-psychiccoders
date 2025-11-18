@@ -92,7 +92,31 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeMarketplace();
     setupEventListeners();
     loadProducts();
+    setupProductListeners();
 });
+
+/**
+ * Setup real-time listeners for products
+ * This allows the marketplace to update automatically when products are added/updated
+ */
+function setupProductListeners() {
+    if (!database) return;
+
+    // Listen for changes in productCatalog (backward compatibility)
+    try {
+        database.ref('productCatalog').on('value', () => {
+            // Reload products when catalog changes
+            loadProducts();
+        });
+    } catch (error) {
+        console.warn('Could not setup productCatalog listeners:', error);
+    }
+
+    // Note: Real-time listeners for individual user products would require
+    // setting up listeners for each user, which can be performance-intensive.
+    // For now, users can refresh the page to see new products.
+    // This can be enhanced later with a more efficient approach.
+}
 
 /**
  * Initialize marketplace
@@ -152,10 +176,42 @@ function setupEventListeners() {
             closeUserMenu();
         }
     });
+
+    // Clean up body classes on window resize
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 768) {
+            document.body.classList.remove('sidebar-open', 'modal-open');
+        }
+    });
+
+    // Close sidebars when clicking outside on mobile
+    document.addEventListener('click', (e) => {
+        const cartSidebar = document.getElementById('cartSidebar');
+        const filtersSidebar = document.getElementById('filtersSidebar');
+        
+        if (window.innerWidth <= 768) {
+            // Close cart sidebar if clicking outside
+            if (cartSidebar && cartSidebar.classList.contains('active')) {
+                if (!cartSidebar.contains(e.target) && !e.target.closest('#cartButton')) {
+                    cartSidebar.classList.remove('active');
+                    document.body.classList.remove('sidebar-open');
+                }
+            }
+            
+            // Close filters sidebar if clicking outside
+            if (filtersSidebar && filtersSidebar.classList.contains('active')) {
+                if (!filtersSidebar.contains(e.target) && !e.target.closest('.btn-filter-toggle')) {
+                    filtersSidebar.classList.remove('active');
+                    document.body.classList.remove('sidebar-open');
+                }
+            }
+        }
+    });
 }
 
 /**
  * Load products from Firebase
+ * Reads products from users/{userId}/products for all users
  */
 async function loadProducts() {
     const loadingEl = document.getElementById('productsLoading');
@@ -173,16 +229,128 @@ async function loadProducts() {
             throw new Error('Database not initialized');
         }
 
-        const snapshot = await database.ref('productCatalog').once('value');
-        const data = snapshot.val() || {};
-        
-        allProducts = Object.entries(data)
-            .map(([id, product]) => ({
-                id,
-                ...product
-            }))
-            .filter(product => product.name && product.description); // Filter out incomplete products
+        // First, try to read from productCatalog (backward compatibility)
+        let productsFromCatalog = [];
+        try {
+            const catalogSnapshot = await database.ref('productCatalog').once('value');
+            const catalogData = catalogSnapshot.val() || {};
+            productsFromCatalog = Object.entries(catalogData)
+                .map(([id, product]) => {
+                    const normalizedProduct = {
+                        id,
+                        ...product,
+                        source: 'catalog'
+                    };
+                    
+                    // Normalize image data - check multiple possible field names
+                    if (product.image && !normalizedProduct.imageBase64) {
+                        normalizedProduct.imageBase64 = product.image;
+                    }
+                    if (product.imageBase64 && !normalizedProduct.imageBase64) {
+                        normalizedProduct.imageBase64 = product.imageBase64;
+                    }
+                    
+                    // Normalize image file type
+                    if (product.imageFileType) {
+                        normalizedProduct.imageFileType = product.imageFileType;
+                    } else if (normalizedProduct.imageBase64) {
+                        normalizedProduct.imageFileType = 'image/jpeg'; // default
+                    }
+                    
+                    return normalizedProduct;
+                })
+                .filter(product => product.name && product.description);
+        } catch (catalogError) {
+            console.warn('Could not load from productCatalog:', catalogError);
+            // Continue to load from users
+        }
 
+        // Load products from all users
+        let productsFromUsers = [];
+        try {
+            const usersSnapshot = await database.ref('users').once('value');
+            const usersData = usersSnapshot.val() || {};
+            
+            // Iterate through all users and collect their products
+            for (const [userId, userData] of Object.entries(usersData)) {
+                if (userData && userData.products) {
+                    const userProducts = Object.entries(userData.products)
+                        .map(([productId, product]) => {
+                            // Normalize image fields - handle different field names
+                            const normalizedProduct = {
+                                id: productId,
+                                ...product,
+                                userId: userId,
+                                exporterId: userId,
+                                exporterName: product.exporterName || userData.profile?.displayName || userData.profile?.companyName || 'Exporter',
+                                source: 'user',
+                                createdAt: product.createdAt || product.updatedAt || new Date().toISOString()
+                            };
+                            
+                            // Normalize image data - check multiple possible field names
+                            if (product.image && !normalizedProduct.imageBase64) {
+                                normalizedProduct.imageBase64 = product.image;
+                            }
+                            if (product.imageBase64 && !normalizedProduct.imageBase64) {
+                                normalizedProduct.imageBase64 = product.imageBase64;
+                            }
+                            
+                            // Normalize image file type
+                            if (product.imageFileType) {
+                                normalizedProduct.imageFileType = product.imageFileType;
+                            } else if (product.imageFileName) {
+                                // Try to infer from filename
+                                const ext = product.imageFileName.split('.').pop()?.toLowerCase();
+                                if (ext === 'jpg' || ext === 'jpeg') {
+                                    normalizedProduct.imageFileType = 'image/jpeg';
+                                } else if (ext === 'png') {
+                                    normalizedProduct.imageFileType = 'image/png';
+                                } else if (ext === 'gif') {
+                                    normalizedProduct.imageFileType = 'image/gif';
+                                } else if (ext === 'webp') {
+                                    normalizedProduct.imageFileType = 'image/webp';
+                                } else {
+                                    normalizedProduct.imageFileType = 'image/jpeg'; // default
+                                }
+                            } else if (normalizedProduct.imageBase64) {
+                                // Default to jpeg if we have image but no type
+                                normalizedProduct.imageFileType = 'image/jpeg';
+                            }
+                            
+                            return normalizedProduct;
+                        })
+                        .filter(product => product.name && product.description);
+                    
+                    productsFromUsers = productsFromUsers.concat(userProducts);
+                }
+            }
+        } catch (usersError) {
+            console.error('Error loading products from users:', usersError);
+            // If we have products from catalog, use those
+            if (productsFromCatalog.length > 0) {
+                productsFromUsers = [];
+            } else {
+                throw usersError;
+            }
+        }
+
+        // Combine products from both sources, prioritizing user products
+        // Remove duplicates based on product ID
+        const allProductsMap = new Map();
+        
+        // Add products from users first
+        productsFromUsers.forEach(product => {
+            allProductsMap.set(product.id, product);
+        });
+        
+        // Add products from catalog if they don't already exist
+        productsFromCatalog.forEach(product => {
+            if (!allProductsMap.has(product.id)) {
+                allProductsMap.set(product.id, product);
+            }
+        });
+        
+        allProducts = Array.from(allProductsMap.values());
         filteredProducts = [...allProducts];
         
         if (loadingEl) loadingEl.style.display = 'none';
@@ -203,22 +371,29 @@ async function loadProducts() {
                 emptyEl.innerHTML = `
                     <div class="empty-icon">🔒</div>
                     <h3>Permission Denied</h3>
-                    <p style="margin-bottom: 1rem;">Firebase security rules need to be configured to allow public read access to the product catalog.</p>
+                    <p style="margin-bottom: 1rem;">Firebase security rules need to be configured to allow public read access to products.</p>
                     <div style="background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 8px; padding: 1.5rem; margin: 1rem 0; text-align: left;">
                         <h4 style="margin-top: 0; color: #333; font-size: 1rem;">📋 Steps to Fix:</h4>
                         <ol style="margin: 0.5rem 0; padding-left: 1.5rem; color: #666; line-height: 1.8;">
                             <li>Go to <strong>Firebase Console</strong> → Your <strong>Exporter Project</strong></li>
                             <li>Navigate to <strong>Realtime Database</strong> → <strong>Rules</strong> tab</li>
-                            <li>Copy the rules from <code style="background: #fff; padding: 0.2rem 0.4rem; border-radius: 3px;">Export-Dashboard/firebase-security-rules.json</code></li>
+                            <li>Update the rules to allow public read access to products</li>
                             <li>Paste and <strong>Publish</strong> the rules</li>
                         </ol>
                         <div style="margin-top: 1rem; padding: 1rem; background: #fff; border-radius: 4px; border-left: 4px solid #667eea;">
                             <strong style="color: #667eea;">Required Rule:</strong>
-                            <pre style="margin: 0.5rem 0 0 0; padding: 0.75rem; background: #f5f5f5; border-radius: 4px; overflow-x: auto; font-size: 0.85rem;"><code>"productCatalog": {
-  ".read": true,
-  ".write": "auth != null"
+                            <pre style="margin: 0.5rem 0 0 0; padding: 0.75rem; background: #f5f5f5; border-radius: 4px; overflow-x: auto; font-size: 0.85rem;"><code>"users": {
+  "$uid": {
+    "products": {
+      ".read": true,
+      ".write": "$uid === auth.uid"
+    }
+  }
 }</code></pre>
                         </div>
+                        <p style="margin-top: 1rem; font-size: 0.9rem; color: #666;">
+                            This allows anyone to read products from all users (for marketplace display) while only allowing users to write their own products.
+                        </p>
                     </div>
                     <p style="font-size: 0.9rem; color: #666; margin-top: 1rem;">
                         Once the rules are updated, refresh this page.
@@ -229,6 +404,9 @@ async function loadProducts() {
                     <div class="empty-icon">⚠️</div>
                     <h3>Error loading products</h3>
                     <p>${error.message || 'Please try again later'}</p>
+                    <button onclick="loadProducts()" style="margin-top: 1rem; padding: 0.75rem 1.5rem; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                        Try Again
+                    </button>
                 `;
             }
         }
@@ -378,12 +556,37 @@ function renderProducts() {
 }
 
 /**
+ * Get product image source - handles all possible image field formats
+ */
+function getProductImageSrc(product) {
+    // Check for imageBase64 first (most common)
+    let imageBase64 = product.imageBase64 || product.image || '';
+    
+    // If imageBase64 is a data URL, use it directly
+    if (imageBase64 && imageBase64.startsWith('data:')) {
+        return imageBase64;
+    }
+    
+    // If we have base64 data, construct data URL
+    if (imageBase64) {
+        const imageFileType = product.imageFileType || 'image/jpeg';
+        // Remove data: prefix if already present
+        if (imageBase64.startsWith('data:')) {
+            return imageBase64;
+        }
+        return `data:${imageFileType};base64,${imageBase64}`;
+    }
+    
+    // No image available
+    return null;
+}
+
+/**
  * Create product card HTML
  */
 function createProductCard(product) {
-    const imageSrc = product.imageBase64 
-        ? `data:${product.imageFileType || 'image/jpeg'};base64,${product.imageBase64}`
-        : 'https://via.placeholder.com/300x200?text=No+Image';
+    const imageSrc = getProductImageSrc(product);
+    const hasImage = !!imageSrc;
     
     const price = product.priceValue 
         ? `${product.priceCurrency || 'USD'} ${product.priceValue.toLocaleString()}`
@@ -391,23 +594,31 @@ function createProductCard(product) {
 
     const category = product.category || 'other';
     const incoterm = product.incoterm || 'Not specified';
+    
+    // Escape HTML to prevent XSS
+    const escapeHtml = (str) => {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    };
 
     return `
         <div class="product-card" onclick="viewProductDetails('${product.id}')">
             <div class="product-image">
-                ${product.imageBase64 
-                    ? `<img src="${imageSrc}" alt="${product.name || 'Product'}" loading="lazy">`
+                ${hasImage 
+                    ? `<img src="${imageSrc}" alt="${escapeHtml(product.name || 'Product')}" loading="lazy" onerror="this.parentElement.innerHTML='<span>📦</span>'">`
                     : '<span>📦</span>'
                 }
             </div>
             <div class="product-info">
-                <h3 class="product-name">${product.name || 'Unnamed Product'}</h3>
-                <p class="product-description">${product.description || 'No description available'}</p>
+                <h3 class="product-name">${escapeHtml(product.name || 'Unnamed Product')}</h3>
+                <p class="product-description">${escapeHtml(product.description || 'No description available')}</p>
                 <div class="product-meta">
-                    <span>${category}</span>
-                    ${incoterm !== 'Not specified' ? `<span>${incoterm}</span>` : ''}
+                    <span>${escapeHtml(category)}</span>
+                    ${incoterm !== 'Not specified' ? `<span>${escapeHtml(incoterm)}</span>` : ''}
                 </div>
-                <div class="product-price">${price}</div>
+                <div class="product-price">${escapeHtml(price)}</div>
                 <div class="product-actions">
                     <button class="btn-view-details" onclick="event.stopPropagation(); viewProductDetails('${product.id}')">
                         View Details
@@ -449,23 +660,28 @@ async function viewProductDetails(productId) {
     
     if (!modal || !content) return;
 
-    const imageSrc = product.imageBase64 
-        ? `data:${product.imageFileType || 'image/jpeg'};base64,${product.imageBase64}`
-        : 'https://via.placeholder.com/600x400?text=No+Image';
-
+    const imageSrc = getProductImageSrc(product) || 'https://via.placeholder.com/600x400?text=No+Image';
     const price = product.priceValue 
         ? `${product.priceCurrency || 'USD'} ${product.priceValue.toLocaleString()}`
         : 'Price on request';
+    
+    // Escape HTML to prevent XSS
+    const escapeHtml = (str) => {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    };
 
     content.innerHTML = `
-        <img src="${imageSrc}" alt="${product.name}" class="product-detail-image">
+        <img src="${imageSrc}" alt="${escapeHtml(product.name || 'Product')}" class="product-detail-image" onerror="this.src='https://via.placeholder.com/600x400?text=No+Image'">
         <div class="product-detail-info">
-            <h2>${product.name || 'Unnamed Product'}</h2>
-            <div class="product-detail-price">${price}</div>
+            <h2>${escapeHtml(product.name || 'Unnamed Product')}</h2>
+            <div class="product-detail-price">${escapeHtml(price)}</div>
             
             <div class="product-detail-section">
                 <h3>Description</h3>
-                <p>${product.description || 'No description available'}</p>
+                <p>${escapeHtml(product.description || 'No description available')}</p>
             </div>
 
             <div class="product-detail-section">
@@ -474,43 +690,43 @@ async function viewProductDetails(productId) {
                     ${product.category ? `
                         <div class="spec-item">
                             <div class="spec-label">Category</div>
-                            <div class="spec-value">${product.category}</div>
+                            <div class="spec-value">${escapeHtml(product.category)}</div>
                         </div>
                     ` : ''}
                     ${product.hsCode ? `
                         <div class="spec-item">
                             <div class="spec-label">HS Code</div>
-                            <div class="spec-value">${product.hsCode}</div>
+                            <div class="spec-value">${escapeHtml(product.hsCode)}</div>
                         </div>
                     ` : ''}
                     ${product.incoterm ? `
                         <div class="spec-item">
                             <div class="spec-label">Incoterm</div>
-                            <div class="spec-value">${product.incoterm}</div>
+                            <div class="spec-value">${escapeHtml(product.incoterm)}</div>
                         </div>
                     ` : ''}
                     ${product.minOrderQty ? `
                         <div class="spec-item">
                             <div class="spec-label">Min Order Quantity</div>
-                            <div class="spec-value">${product.minOrderQty}</div>
+                            <div class="spec-value">${escapeHtml(product.minOrderQty)}</div>
                         </div>
                     ` : ''}
                     ${product.leadTime ? `
                         <div class="spec-item">
                             <div class="spec-label">Lead Time</div>
-                            <div class="spec-value">${product.leadTime}</div>
+                            <div class="spec-value">${escapeHtml(product.leadTime)}</div>
                         </div>
                     ` : ''}
                     ${product.productionCapacity ? `
                         <div class="spec-item">
                             <div class="spec-label">Monthly Capacity</div>
-                            <div class="spec-value">${product.productionCapacity}</div>
+                            <div class="spec-value">${escapeHtml(product.productionCapacity)}</div>
                         </div>
                     ` : ''}
                     ${product.targetMarkets ? `
                         <div class="spec-item">
                             <div class="spec-label">Target Markets</div>
-                            <div class="spec-value">${product.targetMarkets}</div>
+                            <div class="spec-value">${escapeHtml(product.targetMarkets)}</div>
                         </div>
                     ` : ''}
                 </div>
@@ -519,28 +735,28 @@ async function viewProductDetails(productId) {
             ${product.specs ? `
                 <div class="product-detail-section">
                     <h3>Key Specifications</h3>
-                    <p>${product.specs}</p>
+                    <p>${escapeHtml(product.specs)}</p>
                 </div>
             ` : ''}
 
             ${product.packagingDetails ? `
                 <div class="product-detail-section">
                     <h3>Packaging & Labelling</h3>
-                    <p>${product.packagingDetails}</p>
+                    <p>${escapeHtml(product.packagingDetails)}</p>
                 </div>
             ` : ''}
 
             ${product.certifications ? `
                 <div class="product-detail-section">
                     <h3>Certifications</h3>
-                    <p>${product.certifications}</p>
+                    <p>${escapeHtml(product.certifications)}</p>
                 </div>
             ` : ''}
 
             ${product.complianceNotes ? `
                 <div class="product-detail-section">
                     <h3>Compliance Notes</h3>
-                    <p>${product.complianceNotes}</p>
+                    <p>${escapeHtml(product.complianceNotes)}</p>
                 </div>
             ` : ''}
 
@@ -559,6 +775,9 @@ async function viewProductDetails(productId) {
 
     modal.classList.add('active');
     modal.setAttribute('aria-hidden', 'false');
+    if (window.innerWidth <= 768) {
+        document.body.classList.add('modal-open');
+    }
 }
 
 /**
@@ -569,6 +788,9 @@ function closeProductModal() {
     if (modal) {
         modal.classList.remove('active');
         modal.setAttribute('aria-hidden', 'true');
+        if (window.innerWidth <= 768) {
+            document.body.classList.remove('modal-open');
+        }
     }
 }
 
@@ -595,15 +817,20 @@ async function addToCart(productId) {
     if (existingItem) {
         existingItem.quantity += 1;
     } else {
+        // Normalize image data before adding to cart
+        const imageBase64 = product.imageBase64 || product.image || '';
+        const imageFileType = product.imageFileType || 'image/jpeg';
+        
         cart.push({
             id: product.id,
             name: product.name,
             price: product.priceValue || 0,
             currency: product.priceCurrency || 'USD',
-            imageBase64: product.imageBase64,
-            imageFileType: product.imageFileType,
+            imageBase64: imageBase64,
+            imageFileType: imageFileType,
+            image: imageBase64, // Also store as 'image' for compatibility
             quantity: 1,
-            exporterId: product.userId,
+            exporterId: product.userId || product.exporterId,
             exporterName: product.exporterName
         });
     }
@@ -751,20 +978,27 @@ function updateCartDisplay() {
  * Create cart item HTML
  */
 function createCartItemHTML(item) {
-    const imageSrc = item.imageBase64 
-        ? `data:${item.imageFileType || 'image/jpeg'};base64,${item.imageBase64}`
-        : 'https://via.placeholder.com/80x80?text=No+Image';
+    // Use the same image helper function
+    const imageSrc = getProductImageSrc(item) || 'https://via.placeholder.com/80x80?text=No+Image';
+    
+    // Escape HTML to prevent XSS
+    const escapeHtml = (str) => {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    };
 
     return `
         <div class="cart-item">
-            <img src="${imageSrc}" alt="${item.name}" class="cart-item-image">
+            <img src="${imageSrc}" alt="${escapeHtml(item.name || 'Product')}" class="cart-item-image" onerror="this.src='https://via.placeholder.com/80x80?text=No+Image'">
             <div class="cart-item-info">
-                <div class="cart-item-name">${item.name}</div>
-                <div class="cart-item-price">${item.currency} ${(item.price * item.quantity).toLocaleString()}</div>
+                <div class="cart-item-name">${escapeHtml(item.name || 'Unnamed Product')}</div>
+                <div class="cart-item-price">${escapeHtml(item.currency || 'USD')} ${((item.price || 0) * (item.quantity || 1)).toLocaleString()}</div>
                 <div class="cart-item-actions">
                     <div class="cart-item-quantity">
                         <button class="quantity-btn" onclick="updateCartQuantity('${item.id}', -1)">-</button>
-                        <span>${item.quantity}</span>
+                        <span>${item.quantity || 1}</span>
                         <button class="quantity-btn" onclick="updateCartQuantity('${item.id}', 1)">+</button>
                     </div>
                     <button class="remove-item-btn" onclick="removeFromCart('${item.id}')" title="Remove">
@@ -785,7 +1019,14 @@ function createCartItemHTML(item) {
 function toggleCart() {
     const cartSidebar = document.getElementById('cartSidebar');
     if (cartSidebar) {
-        cartSidebar.classList.toggle('active');
+        const isActive = cartSidebar.classList.toggle('active');
+        if (window.innerWidth <= 768) {
+            if (isActive) {
+                document.body.classList.add('sidebar-open');
+            } else {
+                document.body.classList.remove('sidebar-open');
+            }
+        }
     }
 }
 
@@ -795,7 +1036,14 @@ function toggleCart() {
 function toggleFilters() {
     const filtersSidebar = document.getElementById('filtersSidebar');
     if (filtersSidebar) {
-        filtersSidebar.classList.toggle('active');
+        const isActive = filtersSidebar.classList.toggle('active');
+        if (window.innerWidth <= 768) {
+            if (isActive) {
+                document.body.classList.add('sidebar-open');
+            } else {
+                document.body.classList.remove('sidebar-open');
+            }
+        }
     }
 }
 

@@ -444,6 +444,7 @@ body {
     background: var(--color-primary);
     color: var(--color-bg-primary);
     box-shadow: var(--shadow-md);
+    
 }
 
 .btn-primary:hover,
@@ -468,7 +469,7 @@ body {
 .btn-secondary:hover,
 .btn-secondary:focus {
     background: var(--color-primary);
-    color: var(--color-bg-primary);
+    /* color: var(--color-bg-primary); */
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
     outline: none;
@@ -1274,6 +1275,7 @@ a:focus-visible {
 
 .auth-form.active {
     display: block;
+    padding: 25px;
 }
 
 @keyframes fadeInUp {

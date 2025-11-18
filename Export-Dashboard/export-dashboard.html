@@ -1,21 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FXcgo</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23667eea' width='100' height='100'/><text x='50' y='65' font-size='60' font-weight='bold' fill='white' text-anchor='middle'>G</text></svg>">
+    
     <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="dashboard-styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 </head>
+
 <body>
     <!-- Dashboard Layout -->
     <div class="dashboard-container">
@@ -23,7 +26,7 @@
         <aside class="dashboard-sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="logo">
-                    <span class="logo-text">GlobalGuard</span>
+                    <span class="logo-text">FXcgo</span>
                 </div>
                 <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -32,12 +35,13 @@
                     </svg>
                 </button>
             </div>
-            
+
             <nav class="sidebar-nav">
                 <ul class="nav-list">
                     <li class="nav-item">
                         <a href="#dashboard" class="nav-link active" data-tab="dashboard">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <rect x="3" y="3" width="7" height="7"></rect>
                                 <rect x="14" y="3" width="7" height="7"></rect>
                                 <rect x="14" y="14" width="7" height="7"></rect>
@@ -48,7 +52,8 @@
                     </li>
                     <li class="nav-item">
                         <a href="#contracts" class="nav-link" data-tab="contracts">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                 <polyline points="14 2 14 8 20 8"></polyline>
                                 <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -60,7 +65,8 @@
                     </li>
                     <li class="nav-item">
                         <a href="#insurance" class="nav-link" data-tab="insurance">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                             </svg>
                             <span>Insurance</span>
@@ -68,8 +74,11 @@
                     </li>
                     <li class="nav-item">
                         <a href="#products" class="nav-link" data-tab="products">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                                </path>
                                 <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
                                 <line x1="12" y1="22.08" x2="12" y2="12"></line>
                             </svg>
@@ -78,7 +87,8 @@
                     </li>
                     <li class="nav-item">
                         <a href="#payments" class="nav-link" data-tab="payments">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
                                 <line x1="1" y1="10" x2="23" y2="10"></line>
                             </svg>
@@ -87,7 +97,8 @@
                     </li>
                     <li class="nav-item">
                         <a href="#documents" class="nav-link" data-tab="documents">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                 <polyline points="14 2 14 8 20 8"></polyline>
                                 <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -99,7 +110,8 @@
                     </li>
                     <li class="nav-item">
                         <a href="#analytics" class="nav-link" data-tab="analytics">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <line x1="18" y1="20" x2="18" y2="10"></line>
                                 <line x1="12" y1="20" x2="12" y2="4"></line>
                                 <line x1="6" y1="20" x2="6" y2="14"></line>
@@ -109,7 +121,8 @@
                     </li>
                     <li class="nav-item">
                         <a href="#support" class="nav-link" data-tab="support">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <circle cx="12" cy="12" r="10"></circle>
                                 <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                                 <line x1="12" y1="17" x2="12.01" y2="17"></line>
@@ -119,7 +132,8 @@
                     </li>
                     <li class="nav-item">
                         <a href="../marketplace/marketplace.html" class="nav-link" target="_blank">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M3 7h18"></path>
                                 <path d="M6 7V3h12v4"></path>
                                 <path d="M5 7l1.68 12.06A2 2 0 0 0 8.66 21h6.68a2 2 0 0 0 1.98-1.94L19 7"></path>
@@ -129,7 +143,8 @@
                     </li>
                     <li class="nav-item">
                         <a href="#cart" class="nav-link" data-tab="cart">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <circle cx="9" cy="21" r="1"></circle>
                                 <circle cx="20" cy="21" r="1"></circle>
                                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
@@ -148,7 +163,8 @@
             <header class="dashboard-header">
                 <div class="header-left">
                     <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
                             <line x1="3" y1="12" x2="21" y2="12"></line>
                             <line x1="3" y1="6" x2="21" y2="6"></line>
                             <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -158,7 +174,8 @@
                 </div>
                 <div class="header-right">
                     <button class="notification-btn" aria-label="Notifications">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                         </svg>
@@ -170,7 +187,8 @@
                                 <span id="avatarInitials">U</span>
                             </div>
                             <span class="profile-name" id="profileName">User</span>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <polyline points="6 9 12 15 18 9"></polyline>
                             </svg>
                         </button>
@@ -185,7 +203,7 @@
                         <h2>Welcome back, <span id="welcomeName">Exporter</span>!</h2>
                         <p>Manage your exports, contracts, and global-ready product catalog from one place.</p>
                     </div>
-                    
+
                     <!-- eKYC Section -->
                     <div class="ekyc-section" id="ekycSection">
                         <div class="ekyc-card" id="ekycCard">
@@ -196,7 +214,8 @@
                                     <p>Verify your identity to access all features and services.</p>
                                 </div>
                             </div>
-                            <button class="btn-ekyc" id="ekycButton" onclick="handleEKYCButtonClick()">Complete eKYC</button>
+                            <button class="btn-ekyc" id="ekycButton" onclick="handleEKYCButtonClick()">Complete
+                                eKYC</button>
                         </div>
                         <div class="ekyc-status-card" id="ekycStatusCard" style="display: none;">
                             <div class="ekyc-status-content">
@@ -207,20 +226,22 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Video Call Request Button (shown after eKYC submission) -->
                         <div id="videoCallRequestCard" class="video-call-request-card" style="display: none;">
                             <div class="video-call-request-content">
                                 <div class="request-icon">📹</div>
                                 <div class="request-text">
                                     <h3>Complete Your Verification</h3>
-                                    <p>Schedule a video call with our agent to verify your identity and complete your eKYC.</p>
+                                    <p>Schedule a video call with our agent to verify your identity and complete your
+                                        eKYC.</p>
                                 </div>
-                                <button class="btn-request-call" onclick="requestVideoCall()">Request Video Call</button>
+                                <button class="btn-request-call" onclick="requestVideoCall()">Request Video
+                                    Call</button>
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="stats-grid">
                         <div class="stat-card">
                             <div class="stat-icon">📊</div>
@@ -253,10 +274,82 @@
                     </div>
                 </div>
 
-                <!-- Other sections will be dynamically shown -->
+                <!-- Forward Contracts Section -->
                 <div class="content-section" id="contractsSection" style="display: none;">
-                    <h2>Forward Contracts</h2>
-                    <p>Manage your currency forward contracts here.</p>
+                    <div class="forward-contract-container">
+                        <header class="forward-contract-hero">
+                            <div class="forward-contract-hero-icon">💱</div>
+                            <h2>Forward Contract Note Generator</h2>
+                            <p class="forward-contract-subheadline">Analyze FX trends, volatility, and risk tolerance to determine the optimal time to lock a forward contract.</p>
+                        </header>
+
+                        <main class="forward-contract-main-content">
+                            <div class="forward-contract-form-card">
+                                <div class="forward-contract-card-header">
+                                    <h3>Contract Details</h3>
+                                </div>
+                                <form id="forwardContractForm" class="forward-contract-form">
+                                    <div class="forward-contract-form-row">
+                                        <div class="forward-contract-form-group">
+                                            <label for="forwardContractAmount">
+                                                <span class="forward-contract-label-icon">💰</span>
+                                                Amount
+                                            </label>
+                                            <input type="number" id="forwardContractAmount" name="amount" placeholder="Enter amount" required>
+                                        </div>
+
+                                        <div class="forward-contract-form-group">
+                                            <label for="forwardContractSettlementDate">
+                                                <span class="forward-contract-label-icon">📅</span>
+                                                Settlement Date
+                                            </label>
+                                            <input type="date" id="forwardContractSettlementDate" name="settlementDate" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="forward-contract-form-row">
+                                        <div class="forward-contract-form-group">
+                                            <label for="forwardContractRiskTolerance">
+                                                <span class="forward-contract-label-icon">⚡</span>
+                                                Risk Tolerance
+                                            </label>
+                                            <select id="forwardContractRiskTolerance" name="riskTolerance" required>
+                                                <option value="">Select risk tolerance</option>
+                                                <option value="low">Low</option>
+                                                <option value="medium">Medium</option>
+                                                <option value="high">High</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="forward-contract-form-group">
+                                            <label for="forwardContractCurrencyPair">
+                                                <span class="forward-contract-label-icon">🌍</span>
+                                                Currency Pair
+                                            </label>
+                                            <select id="forwardContractCurrencyPair" name="currencyPair" required>
+                                                <option value="">Select currency pair</option>
+                                                <option value="USD/EUR">USD/EUR</option>
+                                                <option value="USD/GBP">USD/GBP</option>
+                                                <option value="USD/JPY">USD/JPY</option>
+                                                <option value="USD/INR">USD/INR</option>
+                                                <option value="EUR/GBP">EUR/GBP</option>
+                                                <option value="EUR/JPY">EUR/JPY</option>
+                                                <option value="GBP/JPY">GBP/JPY</option>
+                                            </select>
+                                            <div id="forwardContractCurrencyPrice" class="forward-contract-currency-price"></div>
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="forward-contract-generate-btn">
+                                        <span>Generate Forward Contract Note</span>
+                                        <span class="forward-contract-btn-arrow">→</span>
+                                    </button>
+                                </form>
+                            </div>
+
+                            <div id="forwardContractResults" class="forward-contract-results-section"></div>
+                        </main>
+                    </div>
                 </div>
 
                 <div class="content-section" id="insuranceSection" style="display: none;">
@@ -279,73 +372,44 @@
 
                             <label>
                                 Shipment value (USD)
-                                <input
-                                    type="number"
-                                    name="shipmentValue"
-                                    min="1000"
-                                    step="500"
-                                    placeholder="e.g. 250000"
-                                    required
-                                />
+                                <input type="number" name="shipmentValue" min="1000" step="500"
+                                    placeholder="e.g. 250000" required />
                             </label>
 
                             <label>
                                 Origin country
-                                <select id="insurance-origin-country" name="originCountry" data-port-target="insurance-origin-port" required>
+                                <select id="insurance-origin-country" name="originCountry"
+                                    data-port-target="insurance-origin-port" required>
                                     <option value="">Select country</option>
                                 </select>
                             </label>
 
                             <label>
                                 Origin port
-                                <select
-                                    id="insurance-origin-port"
-                                    name="originPort"
-                                    data-manual-input="insurance-origin-port-manual"
-                                    disabled
-                                    required
-                                >
+                                <select id="insurance-origin-port" name="originPort"
+                                    data-manual-input="insurance-origin-port-manual" disabled required>
                                     <option value="">Select port</option>
                                 </select>
-                                <input
-                                    type="text"
-                                    id="insurance-origin-port-manual"
-                                    class="manual-port"
-                                    placeholder="Enter origin port / UNLOCODE"
-                                    hidden
-                                />
+                                <input type="text" id="insurance-origin-port-manual" class="manual-port"
+                                    placeholder="Enter origin port / UNLOCODE" hidden />
                             </label>
 
                             <label>
                                 Destination country
-                                <select
-                                    id="insurance-destination-country"
-                                    name="destinationCountry"
-                                    data-port-target="insurance-destination-port"
-                                    required
-                                >
+                                <select id="insurance-destination-country" name="destinationCountry"
+                                    data-port-target="insurance-destination-port" required>
                                     <option value="">Select country</option>
                                 </select>
                             </label>
 
                             <label>
                                 Destination port
-                                <select
-                                    id="insurance-destination-port"
-                                    name="destinationPort"
-                                    data-manual-input="insurance-destination-port-manual"
-                                    disabled
-                                    required
-                                >
+                                <select id="insurance-destination-port" name="destinationPort"
+                                    data-manual-input="insurance-destination-port-manual" disabled required>
                                     <option value="">Select port</option>
                                 </select>
-                                <input
-                                    type="text"
-                                    id="insurance-destination-port-manual"
-                                    class="manual-port"
-                                    placeholder="Enter destination port / UNLOCODE"
-                                    hidden
-                                />
+                                <input type="text" id="insurance-destination-port-manual" class="manual-port"
+                                    placeholder="Enter destination port / UNLOCODE" hidden />
                             </label>
 
                             <label>
@@ -369,11 +433,8 @@
 
                             <label class="insurance-span-2">
                                 Additional notes
-                                <textarea
-                                    name="notes"
-                                    rows="2"
-                                    placeholder="Any packaging specifics, temperature control, high theft risk, etc."
-                                ></textarea>
+                                <textarea name="notes" rows="2"
+                                    placeholder="Any packaging specifics, temperature control, high theft risk, etc."></textarea>
                             </label>
 
                             <button id="insurance-submit-btn" class="insurance-primary insurance-span-2" type="submit">
@@ -450,7 +511,8 @@
                                 <div class="product-form-grid">
                                     <div class="form-group">
                                         <label for="productName">Product Name *</label>
-                                        <input type="text" id="productName" name="productName" placeholder="Eg. Organic Basmati Rice" required>
+                                        <input type="text" id="productName" name="productName"
+                                            placeholder="Eg. Organic Basmati Rice" required>
                                     </div>
                                     <div class="form-group">
                                         <label for="productCategory">Category</label>
@@ -471,7 +533,8 @@
                                     </div>
                                     <div class="form-group">
                                         <label for="targetMarkets">Target Markets</label>
-                                        <input type="text" id="targetMarkets" name="targetMarkets" placeholder="Eg. UAE, EU, USA">
+                                        <input type="text" id="targetMarkets" name="targetMarkets"
+                                            placeholder="Eg. UAE, EU, USA">
                                     </div>
                                     <div class="form-group">
                                         <label for="incoterm">Preferred Incoterm</label>
@@ -497,46 +560,56 @@
                                     </div>
                                     <div class="form-group">
                                         <label for="priceValue">Offer Price</label>
-                                        <input type="number" id="priceValue" name="priceValue" step="0.01" placeholder="Eg. 1200">
+                                        <input type="number" id="priceValue" name="priceValue" step="0.01"
+                                            placeholder="Eg. 1200">
                                     </div>
                                     <div class="form-group">
                                         <label for="minOrderQty">Min Order Quantity</label>
-                                        <input type="text" id="minOrderQty" name="minOrderQty" placeholder="Eg. 1 x 20ft container">
+                                        <input type="text" id="minOrderQty" name="minOrderQty"
+                                            placeholder="Eg. 1 x 20ft container">
                                     </div>
                                     <div class="form-group">
                                         <label for="productionCapacity">Monthly Capacity</label>
-                                        <input type="text" id="productionCapacity" name="productionCapacity" placeholder="Eg. 150 MT">
+                                        <input type="text" id="productionCapacity" name="productionCapacity"
+                                            placeholder="Eg. 150 MT">
                                     </div>
                                     <div class="form-group">
                                         <label for="leadTime">Lead Time</label>
-                                        <input type="text" id="leadTime" name="leadTime" placeholder="Eg. 21 days after advance">
+                                        <input type="text" id="leadTime" name="leadTime"
+                                            placeholder="Eg. 21 days after advance">
                                     </div>
                                     <div class="form-group">
                                         <label for="certifications">Certifications</label>
-                                        <input type="text" id="certifications" name="certifications" placeholder="Eg. ISO 22000, USDA Organic">
+                                        <input type="text" id="certifications" name="certifications"
+                                            placeholder="Eg. ISO 22000, USDA Organic">
                                     </div>
                                     <div class="form-group">
                                         <label for="complianceNotes">Compliance Notes</label>
-                                        <input type="text" id="complianceNotes" name="complianceNotes" placeholder="Eg. Meets EU pesticide limits">
+                                        <input type="text" id="complianceNotes" name="complianceNotes"
+                                            placeholder="Eg. Meets EU pesticide limits">
                                     </div>
                                     <div class="form-group full-width">
                                         <label for="productDescription">Sales Description *</label>
-                                        <textarea id="productDescription" name="productDescription" rows="3" placeholder="Buyer-facing overview of the product" required></textarea>
+                                        <textarea id="productDescription" name="productDescription" rows="3"
+                                            placeholder="Buyer-facing overview of the product" required></textarea>
                                     </div>
                                     <div class="form-group full-width">
                                         <label for="productSpecs">Key Specifications</label>
-                                        <textarea id="productSpecs" name="productSpecs" rows="3" placeholder="Moisture %, grade, sizing, ingredients..."></textarea>
+                                        <textarea id="productSpecs" name="productSpecs" rows="3"
+                                            placeholder="Moisture %, grade, sizing, ingredients..."></textarea>
                                     </div>
                                     <div class="form-group full-width">
                                         <label for="packagingDetails">Packaging & Labelling</label>
-                                        <textarea id="packagingDetails" name="packagingDetails" rows="2" placeholder="Eg. 25kg laminated bags, bilingual labelling"></textarea>
+                                        <textarea id="packagingDetails" name="packagingDetails" rows="2"
+                                            placeholder="Eg. 25kg laminated bags, bilingual labelling"></textarea>
                                     </div>
                                 </div>
 
                                 <div class="product-image-upload">
                                     <div class="product-image-copy">
                                         <label for="productImage">Product Image</label>
-                                        <p>Upload a clean product or lifestyle image (max 5 MB). We convert it to Base64 to prevent CORS issues.</p>
+                                        <p>Upload a clean product or lifestyle image (max 5 MB). We convert it to Base64
+                                            to prevent CORS issues.</p>
                                         <input type="file" id="productImage" accept="image/*">
                                         <small>Accepted formats: JPG, PNG, WEBP</small>
                                     </div>
@@ -545,7 +618,8 @@
                                     </div>
                                 </div>
 
-                                <div class="product-message" id="productFormMessage" role="status" aria-live="polite"></div>
+                                <div class="product-message" id="productFormMessage" role="status" aria-live="polite">
+                                </div>
                                 <button type="submit" id="productSubmitBtn" class="btn-save">Save Product</button>
                             </form>
                         </section>
@@ -580,7 +654,8 @@
                         </div>
                         <div class="documents-actions">
                             <div class="documents-search">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
                                     <circle cx="11" cy="11" r="8"></circle>
                                     <path d="m21 21-4.35-4.35"></path>
                                 </svg>
@@ -640,25 +715,30 @@
                             <div class="document-related-header">
                                 <div>
                                     <h3>Country & Port Requirements</h3>
-                                    <p>Cross-check official export/import documents per corridor using trusted government sources.</p>
+                                    <p>Cross-check official export/import documents per corridor using trusted
+                                        government sources.</p>
                                 </div>
                                 <div class="document-related-controls">
                                     <div class="form-group">
                                         <label for="docCountrySelect">Country</label>
-                                        <select id="docCountrySelect" aria-label="Select country for requirements"></select>
+                                        <select id="docCountrySelect"
+                                            aria-label="Select country for requirements"></select>
                                     </div>
                                     <div class="form-group">
                                         <label for="docModeSelect">Mode</label>
                                         <select id="docModeSelect" aria-label="Select transport mode"></select>
                                     </div>
-                                    <button class="btn-secondary" type="button" onclick="generateDocumentChecklist()" aria-label="Generate document checklist">
+                                    <button class="btn-secondary" type="button" onclick="generateDocumentChecklist()"
+                                        aria-label="Generate document checklist">
                                         Generate Checklist
                                     </button>
                                 </div>
                             </div>
 
-                            <div id="docRequirementsTable" class="doc-requirements-table" role="region" aria-live="polite"></div>
-                            <div id="docChecklistResult" class="doc-checklist-result" role="status" aria-live="polite"></div>
+                            <div id="docRequirementsTable" class="doc-requirements-table" role="region"
+                                aria-live="polite"></div>
+                            <div id="docChecklistResult" class="doc-checklist-result" role="status" aria-live="polite">
+                            </div>
                         </div>
                     </section>
                 </div>
@@ -670,7 +750,8 @@
                             <p>Track product readiness, document coverage, and export focus based on your live data.</p>
                         </div>
                         <div class="analytics-header-actions">
-                            <span class="analytics-timestamp" id="analyticsLastRefreshed">Waiting for first refresh…</span>
+                            <span class="analytics-timestamp" id="analyticsLastRefreshed">Waiting for first
+                                refresh…</span>
                             <button type="button" class="btn-secondary" id="analyticsRefreshBtn">Refresh data</button>
                         </div>
                     </div>
@@ -759,7 +840,8 @@
                             <div class="support-chat-header">
                                 <div>
                                     <h3>Smart Support Chat</h3>
-                                    <p id="supportChatHelperText">Hi! I’m your support assistant. How can I help you today?</p>
+                                    <p id="supportChatHelperText">Hi! I’m your support assistant. How can I help you
+                                        today?</p>
                                 </div>
                                 <button type="button" class="support-pill" id="supportLiveBadge" disabled>
                                     <span class="pill-dot"></span>
@@ -773,9 +855,11 @@
                                 </div>
                             </div>
                             <form id="supportChatForm" class="support-chat-input" autocomplete="off">
-                                <input type="text" id="supportMessageInput" placeholder="Type your message..." aria-label="Message support" autocomplete="off">
+                                <input type="text" id="supportMessageInput" placeholder="Type your message..."
+                                    aria-label="Message support" autocomplete="off">
                                 <button type="submit">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
                                         <line x1="22" y1="2" x2="11" y2="13"></line>
                                         <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                                     </svg>
@@ -800,8 +884,10 @@
                                 <h2>Shopping Cart</h2>
                                 <p>Products you've added from the marketplace</p>
                             </div>
-                            <a href="../marketplace/marketplace.html" target="_blank" class="btn-secondary">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <a href="../marketplace/marketplace.html" target="_blank" class="btn-secondary "
+                                style="text-decoration: none;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
                                     <path d="M3 7h18"></path>
                                     <path d="M6 7V3h12v4"></path>
                                     <path d="M5 7l1.68 12.06A2 2 0 0 0 8.66 21h6.68a2 2 0 0 0 1.98-1.94L19 7"></path>
@@ -814,17 +900,22 @@
                                 <div class="empty-icon">🛒</div>
                                 <h3>Your cart is empty</h3>
                                 <p>Add products from the marketplace to see them here</p>
-                                <a href="../marketplace/marketplace.html" target="_blank" class="btn-primary" style="margin-top: 1rem; display: inline-block;">
+                                <a href="../marketplace/marketplace.html" target="_blank" class="btn-primary " style="margin-top: 1rem; display: inline-block; text-decoration: none; padding: 6px;
+                                border-radius: 10px;
+                                text-decoration: none;">
                                     Go to Marketplace
                                 </a>
                             </div>
                         </div>
-                        <div id="exporterCartFooter" style="display: none; margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e0e0e0;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <div id="exporterCartFooter"
+                            style="display: none; margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e0e0e0;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                                 <span style="font-size: 1.25rem; font-weight: 600;">Total:</span>
                                 <strong id="exporterCartTotal" style="font-size: 1.5rem; color: #667eea;">$0.00</strong>
                             </div>
-                            <button class="btn-primary full-width" onclick="proceedExporterCheckout()">Proceed to Checkout</button>
+                            <button class="btn-primary full-width cart-btn" onclick="proceedExporterCheckout()">Proceed
+                                to Checkout</button>
                         </div>
                     </div>
                 </div>
@@ -842,7 +933,7 @@
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
             </button>
-            
+
             <div class="profile-modal-content">
                 <div class="profile-modal-header">
                     <h2 id="profileModalTitle">Profile Settings</h2>
@@ -851,14 +942,22 @@
 
                 <!-- Profile Tabs -->
                 <div class="profile-tabs">
-                    <button class="profile-tab active" data-section="basic" onclick="switchProfileTab('basic')">Basic Info</button>
-                    <button class="profile-tab" data-section="business" onclick="switchProfileTab('business')">Business</button>
-                    <button class="profile-tab" data-section="compliance" onclick="switchProfileTab('compliance')">Compliance</button>
-                    <button class="profile-tab" data-section="products" onclick="switchProfileTab('products')">Products</button>
-                    <button class="profile-tab" data-section="address" onclick="switchProfileTab('address')">Address</button>
-                    <button class="profile-tab" data-section="banking" onclick="switchProfileTab('banking')">Banking</button>
-                    <button class="profile-tab" data-section="documents" onclick="switchProfileTab('documents')">Documents</button>
-                    <button class="profile-tab" data-section="settings" onclick="switchProfileTab('settings')">Settings</button>
+                    <button class="profile-tab active" data-section="basic" onclick="switchProfileTab('basic')">Basic
+                        Info</button>
+                    <button class="profile-tab" data-section="business"
+                        onclick="switchProfileTab('business')">Business</button>
+                    <button class="profile-tab" data-section="compliance"
+                        onclick="switchProfileTab('compliance')">Compliance</button>
+                    <button class="profile-tab" data-section="products"
+                        onclick="switchProfileTab('products')">Products</button>
+                    <button class="profile-tab" data-section="address"
+                        onclick="switchProfileTab('address')">Address</button>
+                    <button class="profile-tab" data-section="banking"
+                        onclick="switchProfileTab('banking')">Banking</button>
+                    <button class="profile-tab" data-section="documents"
+                        onclick="switchProfileTab('documents')">Documents</button>
+                    <button class="profile-tab" data-section="settings"
+                        onclick="switchProfileTab('settings')">Settings</button>
                 </div>
 
                 <!-- Profile Sections -->
@@ -878,7 +977,8 @@
                                         <img id="photoPreviewImg" src="" alt="Profile photo" style="display: none;">
                                         <span id="photoPreviewText">No photo</span>
                                     </div>
-                                    <input type="file" id="profilePhoto" name="profilePhoto" accept="image/*" onchange="handlePhotoUpload(event)">
+                                    <input type="file" id="profilePhoto" name="profilePhoto" accept="image/*"
+                                        onchange="handlePhotoUpload(event)">
                                     <label for="profilePhoto" class="upload-btn">Upload Photo</label>
                                 </div>
                             </div>
@@ -918,7 +1018,8 @@
                             </div>
                             <div class="form-group">
                                 <label for="yearEstablished">Year of Establishment *</label>
-                                <input type="number" id="yearEstablished" name="yearEstablished" min="1900" max="2025" required>
+                                <input type="number" id="yearEstablished" name="yearEstablished" min="1900" max="2025"
+                                    required>
                             </div>
                             <div class="form-group">
                                 <label for="businessCategory">Business Category *</label>
@@ -936,11 +1037,13 @@
                             </div>
                             <div class="form-group">
                                 <label for="companyWebsite">Company Website</label>
-                                <input type="url" id="companyWebsite" name="companyWebsite" placeholder="https://example.com">
+                                <input type="url" id="companyWebsite" name="companyWebsite"
+                                    placeholder="https://example.com">
                             </div>
                             <div class="form-group">
                                 <label for="companyDescription">Company Description</label>
-                                <textarea id="companyDescription" name="companyDescription" rows="4" placeholder="Brief description of your company"></textarea>
+                                <textarea id="companyDescription" name="companyDescription" rows="4"
+                                    placeholder="Brief description of your company"></textarea>
                             </div>
                             <button type="submit" class="btn-save">Save Changes</button>
                         </form>
@@ -1028,7 +1131,8 @@
                             </div>
                             <div class="form-group">
                                 <label for="monthlyVolume">Average Monthly Shipment Volume</label>
-                                <input type="text" id="monthlyVolume" name="monthlyVolume" placeholder="e.g., 100 units, 50 containers">
+                                <input type="text" id="monthlyVolume" name="monthlyVolume"
+                                    placeholder="e.g., 100 units, 50 containers">
                             </div>
                             <div class="form-group">
                                 <label for="shippingMethod">Preferred Shipping Method *</label>
@@ -1117,9 +1221,12 @@
                                 <div class="document-upload-item">
                                     <label for="iecCertificate">IEC Certificate</label>
                                     <div class="file-upload-wrapper">
-                                        <input type="file" id="iecCertificate" name="iecCertificate" accept=".pdf,.jpg,.jpeg,.png" onchange="handleDocumentUpload(event, 'iecCertificate')">
+                                        <input type="file" id="iecCertificate" name="iecCertificate"
+                                            accept=".pdf,.jpg,.jpeg,.png"
+                                            onchange="handleDocumentUpload(event, 'iecCertificate')">
                                         <label for="iecCertificate" class="file-upload-btn">
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
                                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                                 <polyline points="17 8 12 3 7 8"></polyline>
                                                 <line x1="12" y1="3" x2="12" y2="15"></line>
@@ -1132,9 +1239,12 @@
                                 <div class="document-upload-item">
                                     <label for="gstCertificate">GST Certificate</label>
                                     <div class="file-upload-wrapper">
-                                        <input type="file" id="gstCertificate" name="gstCertificate" accept=".pdf,.jpg,.jpeg,.png" onchange="handleDocumentUpload(event, 'gstCertificate')">
+                                        <input type="file" id="gstCertificate" name="gstCertificate"
+                                            accept=".pdf,.jpg,.jpeg,.png"
+                                            onchange="handleDocumentUpload(event, 'gstCertificate')">
                                         <label for="gstCertificate" class="file-upload-btn">
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
                                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                                 <polyline points="17 8 12 3 7 8"></polyline>
                                                 <line x1="12" y1="3" x2="12" y2="15"></line>
@@ -1147,9 +1257,12 @@
                                 <div class="document-upload-item">
                                     <label for="companyRegistration">Company Registration Certificate</label>
                                     <div class="file-upload-wrapper">
-                                        <input type="file" id="companyRegistration" name="companyRegistration" accept=".pdf,.jpg,.jpeg,.png" onchange="handleDocumentUpload(event, 'companyRegistration')">
+                                        <input type="file" id="companyRegistration" name="companyRegistration"
+                                            accept=".pdf,.jpg,.jpeg,.png"
+                                            onchange="handleDocumentUpload(event, 'companyRegistration')">
                                         <label for="companyRegistration" class="file-upload-btn">
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
                                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                                 <polyline points="17 8 12 3 7 8"></polyline>
                                                 <line x1="12" y1="3" x2="12" y2="15"></line>
@@ -1162,9 +1275,12 @@
                                 <div class="document-upload-item">
                                     <label for="ownerIdProof">Owner ID Proof (Aadhar/Passport)</label>
                                     <div class="file-upload-wrapper">
-                                        <input type="file" id="ownerIdProof" name="ownerIdProof" accept=".pdf,.jpg,.jpeg,.png" onchange="handleDocumentUpload(event, 'ownerIdProof')">
+                                        <input type="file" id="ownerIdProof" name="ownerIdProof"
+                                            accept=".pdf,.jpg,.jpeg,.png"
+                                            onchange="handleDocumentUpload(event, 'ownerIdProof')">
                                         <label for="ownerIdProof" class="file-upload-btn">
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
                                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                                 <polyline points="17 8 12 3 7 8"></polyline>
                                                 <line x1="12" y1="3" x2="12" y2="15"></line>
@@ -1177,9 +1293,12 @@
                                 <div class="document-upload-item">
                                     <label for="addressProof">Address Proof</label>
                                     <div class="file-upload-wrapper">
-                                        <input type="file" id="addressProof" name="addressProof" accept=".pdf,.jpg,.jpeg,.png" onchange="handleDocumentUpload(event, 'addressProof')">
+                                        <input type="file" id="addressProof" name="addressProof"
+                                            accept=".pdf,.jpg,.jpeg,.png"
+                                            onchange="handleDocumentUpload(event, 'addressProof')">
                                         <label for="addressProof" class="file-upload-btn">
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
                                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                                 <polyline points="17 8 12 3 7 8"></polyline>
                                                 <line x1="12" y1="3" x2="12" y2="15"></line>
@@ -1244,7 +1363,7 @@
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
             </button>
-            
+
             <div class="ekyc-modal-content">
                 <div class="ekyc-modal-header">
                     <h2 id="ekycModalTitle">Verify Your Identity (eKYC)</h2>
@@ -1257,7 +1376,8 @@
                         <h3>Identity Proof</h3>
                         <div class="form-group">
                             <label for="identityProofType">Select ID Proof *</label>
-                            <select id="identityProofType" name="identityProofType" required onchange="handleIdentityProofChange()">
+                            <select id="identityProofType" name="identityProofType" required
+                                onchange="handleIdentityProofChange()">
                                 <option value="">Select ID Proof</option>
                                 <!-- Options will be populated dynamically based on country -->
                             </select>
@@ -1265,9 +1385,12 @@
                         <div class="form-group">
                             <label for="identityProofFile">Upload ID Proof *</label>
                             <div class="file-upload-wrapper">
-                                <input type="file" id="identityProofFile" name="identityProofFile" accept=".pdf,.jpg,.jpeg,.png" required onchange="handleFilePreview(event, 'identityProof')">
+                                <input type="file" id="identityProofFile" name="identityProofFile"
+                                    accept=".pdf,.jpg,.jpeg,.png" required
+                                    onchange="handleFilePreview(event, 'identityProof')">
                                 <label for="identityProofFile" class="file-upload-btn">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                         <polyline points="17 8 12 3 7 8"></polyline>
                                         <line x1="12" y1="3" x2="12" y2="15"></line>
@@ -1292,9 +1415,12 @@
                         <div class="form-group">
                             <label for="businessProofFile">Upload Business Proof *</label>
                             <div class="file-upload-wrapper">
-                                <input type="file" id="businessProofFile" name="businessProofFile" accept=".pdf,.jpg,.jpeg,.png" required onchange="handleFilePreview(event, 'businessProof')">
+                                <input type="file" id="businessProofFile" name="businessProofFile"
+                                    accept=".pdf,.jpg,.jpeg,.png" required
+                                    onchange="handleFilePreview(event, 'businessProof')">
                                 <label for="businessProofFile" class="file-upload-btn">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                         <polyline points="17 8 12 3 7 8"></polyline>
                                         <line x1="12" y1="3" x2="12" y2="15"></line>
@@ -1319,9 +1445,11 @@
                         <div class="form-group">
                             <label for="bankProofFile">Upload Bank Proof *</label>
                             <div class="file-upload-wrapper">
-                                <input type="file" id="bankProofFile" name="bankProofFile" accept=".pdf,.jpg,.jpeg,.png" required onchange="handleFilePreview(event, 'bankProof')">
+                                <input type="file" id="bankProofFile" name="bankProofFile" accept=".pdf,.jpg,.jpeg,.png"
+                                    required onchange="handleFilePreview(event, 'bankProof')">
                                 <label for="bankProofFile" class="file-upload-btn">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                         <polyline points="17 8 12 3 7 8"></polyline>
                                         <line x1="12" y1="3" x2="12" y2="15"></line>
@@ -1339,25 +1467,34 @@
                         <div class="form-group">
                             <label>Capture Live Selfie *</label>
                             <div class="camera-capture-wrapper">
-                                <div class="camera-preview-container" id="cameraPreviewContainer" style="display: none;">
-                                    <video id="cameraVideo" autoplay playsinline style="width: 100%; max-width: 400px; border-radius: 8px; background: #000;"></video>
+                                <div class="camera-preview-container" id="cameraPreviewContainer"
+                                    style="display: none;">
+                                    <video id="cameraVideo" autoplay playsinline
+                                        style="width: 100%; max-width: 400px; border-radius: 8px; background: #000;"></video>
                                     <canvas id="cameraCanvas" style="display: none;"></canvas>
                                 </div>
                                 <div class="camera-controls">
-                                    <button type="button" class="btn-camera" id="startCameraBtn" onclick="startCamera()">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                                    <button type="button" class="btn-camera" id="startCameraBtn"
+                                        onclick="startCamera()">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <path
+                                                d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z">
+                                            </path>
                                             <circle cx="12" cy="13" r="4"></circle>
                                         </svg>
                                         Open Camera
                                     </button>
-                                    <button type="button" class="btn-capture" id="captureBtn" onclick="captureSelfie()" style="display: none;">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <button type="button" class="btn-capture" id="captureBtn" onclick="captureSelfie()"
+                                        style="display: none;">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
                                             <circle cx="12" cy="12" r="10"></circle>
                                         </svg>
                                         Capture Photo
                                     </button>
-                                    <button type="button" class="btn-cancel-camera" id="cancelCameraBtn" onclick="stopCamera()" style="display: none;">
+                                    <button type="button" class="btn-cancel-camera" id="cancelCameraBtn"
+                                        onclick="stopCamera()" style="display: none;">
                                         Cancel
                                     </button>
                                 </div>
@@ -1381,7 +1518,8 @@
     </div>
 
     <!-- Video Call Verification Modal -->
-    <div id="videoCallModal" class="video-call-modal" role="dialog" aria-labelledby="videoCallModalTitle" aria-hidden="true">
+    <div id="videoCallModal" class="video-call-modal" role="dialog" aria-labelledby="videoCallModalTitle"
+        aria-hidden="true">
         <div class="video-call-modal-overlay"></div>
         <div class="video-call-modal-container">
             <div class="video-call-header">
@@ -1393,7 +1531,7 @@
                     </svg>
                 </button>
             </div>
-            
+
             <div class="video-call-content">
                 <!-- Waiting for Agent -->
                 <div id="waitingForAgent" class="video-call-status">
@@ -1417,19 +1555,24 @@
                     </div>
                     <div class="video-controls">
                         <button class="video-control-btn" id="muteBtn" onclick="toggleMute()">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
                             </svg>
                         </button>
                         <button class="video-control-btn" id="videoBtn" onclick="toggleVideo()">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M23 7l-7 5 7 5V7z"></path>
                                 <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
                             </svg>
                         </button>
                         <button class="video-control-btn end-call" onclick="endVideoCall()">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                                </path>
                             </svg>
                         </button>
                     </div>
@@ -1439,14 +1582,16 @@
                 <div id="callEnded" class="video-call-status" style="display: none;">
                     <div class="status-icon">✓</div>
                     <h3>Verification Complete</h3>
-                    <p id="callEndedMessage">Your verification is being processed. You will be notified once it's complete.</p>
+                    <p id="callEndedMessage">Your verification is being processed. You will be notified once it's
+                        complete.</p>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Document Preview/Detail Modal -->
-    <div id="documentDetailModal" class="document-detail-modal" role="dialog" aria-labelledby="documentDetailTitle" aria-hidden="true">
+    <div id="documentDetailModal" class="document-detail-modal" role="dialog" aria-labelledby="documentDetailTitle"
+        aria-hidden="true">
         <div class="document-detail-overlay" onclick="closeDocumentDetail()"></div>
         <div class="document-detail-container">
             <button class="document-detail-close" onclick="closeDocumentDetail()" aria-label="Close modal">
@@ -1471,17 +1616,22 @@
                         </div>
                         <div class="document-detail-actions">
                             <button class="btn-download" onclick="downloadDocument()" title="Download">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
                                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                     <polyline points="7 10 12 15 17 10"></polyline>
                                     <line x1="12" y1="15" x2="12" y2="3"></line>
                                 </svg>
                                 Download
                             </button>
-                            <button class="btn-delete" id="documentDeleteButton" onclick="deleteDocument()" title="Delete">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <button class="btn-delete" id="documentDeleteButton" onclick="deleteDocument()"
+                                title="Delete">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
                                     <polyline points="3 6 5 6 21 6"></polyline>
-                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    <path
+                                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                    </path>
                                     <line x1="10" y1="11" x2="10" y2="17"></line>
                                     <line x1="14" y1="11" x2="14" y2="17"></line>
                                 </svg>
@@ -1518,7 +1668,8 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="dashboard-script.js"></script>
 </body>
-</html>
 
+</html>

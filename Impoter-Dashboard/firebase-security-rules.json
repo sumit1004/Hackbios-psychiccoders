@@ -1,6 +1,6 @@
 {
   "rules": {
-    "users": {
+    "importers": {
       "$uid": {
         ".read": "$uid === auth.uid",
         ".write": "$uid === auth.uid",

@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Importer Control Room | FXcgo</title>
+    <title>FXcgo</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -14,12 +15,13 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 </head>
+
 <body>
     <div class="dashboard-container importer-ui">
         <aside class="dashboard-sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="logo">
-                    <span class="logo-text">FXcgo Imports</span>
+                    <span class="logo-text">FXcgo</span>
                 </div>
                 <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -31,8 +33,10 @@
             <nav class="sidebar-nav">
                 <ul class="nav-list" role="tablist" aria-label="Importer workspace sections">
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link active" id="tab-dashboard" role="tab" data-tab="dashboard" href="#dashboard" aria-controls="dashboardSection" aria-selected="true" tabindex="0">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <a class="nav-link active" id="tab-dashboard" role="tab" data-tab="dashboard" href="#dashboard"
+                            aria-controls="dashboardSection" aria-selected="true" tabindex="0">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <rect x="3" y="3" width="7" height="7"></rect>
                                 <rect x="14" y="3" width="7" height="7"></rect>
                                 <rect x="14" y="14" width="7" height="7"></rect>
@@ -42,9 +46,13 @@
                         </a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="tab-shipments" role="tab" data-tab="shipments" href="#shipments" aria-controls="shipmentsSection" aria-selected="false" tabindex="-1">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                        <a class="nav-link" id="tab-shipments" role="tab" data-tab="shipments" href="#shipments"
+                            aria-controls="shipmentsSection" aria-selected="false" tabindex="-1">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                                </path>
                                 <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
                                 <line x1="12" y1="22.08" x2="12" y2="12"></line>
                             </svg>
@@ -52,8 +60,10 @@
                         </a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="tab-documents" role="tab" data-tab="documents" href="#documents" aria-controls="documentsSection" aria-selected="false" tabindex="-1">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <a class="nav-link" id="tab-documents" role="tab" data-tab="documents" href="#documents"
+                            aria-controls="documentsSection" aria-selected="false" tabindex="-1">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                 <polyline points="14 2 14 8 20 8"></polyline>
                             </svg>
@@ -61,8 +71,24 @@
                         </a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="tab-payments" role="tab" data-tab="payments" href="#payments" aria-controls="paymentsSection" aria-selected="false" tabindex="-1">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <a class="nav-link" id="tab-contracts" role="tab" data-tab="contracts" href="#contracts"
+                            aria-controls="contractsSection" aria-selected="false" tabindex="-1">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                            <span>Forward Contracts</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="tab-payments" role="tab" data-tab="payments" href="#payments"
+                            aria-controls="paymentsSection" aria-selected="false" tabindex="-1">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
                                 <line x1="1" y1="10" x2="23" y2="10"></line>
                             </svg>
@@ -70,16 +96,20 @@
                         </a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="tab-disputes" role="tab" data-tab="disputes" href="#disputes" aria-controls="disputesSection" aria-selected="false" tabindex="-1">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <a class="nav-link" id="tab-disputes" role="tab" data-tab="disputes" href="#disputes"
+                            aria-controls="disputesSection" aria-selected="false" tabindex="-1">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                             </svg>
                             <span>Disputes</span>
                         </a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="tab-support" role="tab" data-tab="support" href="#support" aria-controls="supportSection" aria-selected="false" tabindex="-1">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <a class="nav-link" id="tab-support" role="tab" data-tab="support" href="#support"
+                            aria-controls="supportSection" aria-selected="false" tabindex="-1">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <circle cx="12" cy="12" r="10"></circle>
                                 <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                                 <line x1="12" y1="17" x2="12.01" y2="17"></line>
@@ -88,8 +118,10 @@
                         </a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="tab-orders" role="tab" data-tab="orders" href="#orders" aria-controls="ordersSection" aria-selected="false" tabindex="-1">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <a class="nav-link" id="tab-orders" role="tab" data-tab="orders" href="#orders"
+                            aria-controls="ordersSection" aria-selected="false" tabindex="-1">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M3 7h18"></path>
                                 <path d="M6 7V3h12v4"></path>
                                 <path d="M5 7l1.68 12.06A2 2 0 0 0 8.66 21h6.68a2 2 0 0 0 1.98-1.94L19 7"></path>
@@ -98,8 +130,11 @@
                         </a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="tab-notifications" role="tab" data-tab="notifications" href="#notifications" aria-controls="notificationsSection" aria-selected="false" tabindex="-1">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <a class="nav-link" id="tab-notifications" role="tab" data-tab="notifications"
+                            href="#notifications" aria-controls="notificationsSection" aria-selected="false"
+                            tabindex="-1">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                                 <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                             </svg>
@@ -107,8 +142,10 @@
                         </a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="tab-profile" role="tab" data-tab="profile" href="#profile" aria-controls="profileSection" aria-selected="false" tabindex="-1">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <a class="nav-link" id="tab-profile" role="tab" data-tab="profile" href="#profile"
+                            aria-controls="profileSection" aria-selected="false" tabindex="-1">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M20 21v-2a4 4 0 0 0-3-3.87"></path>
                                 <path d="M4 21v-2a4 4 0 0 1 3-3.87"></path>
                                 <circle cx="12" cy="7" r="4"></circle>
@@ -118,7 +155,8 @@
                     </li>
                     <li class="nav-item" role="presentation">
                         <a class="nav-link" href="../marketplace/marketplace.html" target="_blank">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M3 7h18"></path>
                                 <path d="M6 7V3h12v4"></path>
                                 <path d="M5 7l1.68 12.06A2 2 0 0 0 8.66 21h6.68a2 2 0 0 0 1.98-1.94L19 7"></path>
@@ -127,8 +165,10 @@
                         </a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="tab-cart" role="tab" data-tab="cart" href="#cart" aria-controls="cartSection" aria-selected="false" tabindex="-1">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <a class="nav-link" id="tab-cart" role="tab" data-tab="cart" href="#cart"
+                            aria-controls="cartSection" aria-selected="false" tabindex="-1">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <circle cx="9" cy="21" r="1"></circle>
                                 <circle cx="20" cy="21" r="1"></circle>
                                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
@@ -155,7 +195,8 @@
             <header class="dashboard-header">
                 <div class="header-left">
                     <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
                             <line x1="3" y1="12" x2="21" y2="12"></line>
                             <line x1="3" y1="6" x2="21" y2="6"></line>
                             <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -165,19 +206,22 @@
                 </div>
                 <div class="header-right">
                     <button class="notification-btn" aria-label="Notifications">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                         </svg>
                         <span class="notification-badge" id="notificationCounter">0</span>
                     </button>
                     <div class="profile-dropdown">
-                        <button class="profile-btn" id="profileBtn" onclick="openImporterProfileModal()" aria-label="Profile">
+                        <button class="profile-btn" id="profileBtn" onclick="openImporterProfileModal()"
+                            aria-label="Profile">
                             <div class="profile-avatar" id="profileAvatar">
                                 <span id="avatarInitials">IM</span>
                             </div>
                             <span class="profile-name" id="profileName">Importer</span>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <polyline points="6 9 12 15 18 9"></polyline>
                             </svg>
                         </button>
@@ -186,19 +230,21 @@
             </header>
 
             <main class="dashboard-content">
-                <section class="content-section active" id="dashboardSection" data-section="dashboard" role="tabpanel" aria-labelledby="tab-dashboard" tabindex="0">
+                <section class="content-section active" id="dashboardSection" data-section="dashboard" role="tabpanel"
+                    aria-labelledby="tab-dashboard" tabindex="0">
                     <div class="welcome-card importer-welcome">
                         <div>
                             <p class="eyebrow">Welcome Back, Importer!</p>
                             <h2 id="importerUserName">Importer Workspace</h2>
-                            <p>Track shipments, verify documents, make secure payments, and manage every import workflow from one place.</p>
+                            <p>Track shipments, verify documents, make secure payments, and manage every import workflow
+                                from one place.</p>
                         </div>
                         <div class="welcome-meta">
                             <span id="importerStatusBadge" class="badge badge-sync">Syncing</span>
                             <button class="btn-secondary" id="refreshImporterData">Refresh</button>
                         </div>
                     </div>
-                    
+
                     <!-- eKYC Section -->
                     <div class="ekyc-section" id="importerEkycSection">
                         <div class="ekyc-card" id="importerEkycCard">
@@ -209,31 +255,35 @@
                                     <p>Verify your identity to access all features and services.</p>
                                 </div>
                             </div>
-                            <button class="btn-ekyc" id="importerEkycButton" onclick="handleImporterEKYCButtonClick()">Complete eKYC</button>
+                            <button class="btn-ekyc" id="importerEkycButton"
+                                onclick="handleImporterEKYCButtonClick()">Complete eKYC</button>
                         </div>
                         <div class="ekyc-status-card" id="importerEkycStatusCard" style="display: none;">
                             <div class="ekyc-status-content">
                                 <div class="ekyc-status-icon" id="importerEkycStatusIcon">✓</div>
                                 <div class="ekyc-status-text">
                                     <h3 id="importerEkycStatusTitle">eKYC Status</h3>
-                                    <p id="importerEkycStatusMessage">Your eKYC verification status will appear here.</p>
+                                    <p id="importerEkycStatusMessage">Your eKYC verification status will appear here.
+                                    </p>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Video Call Request Button (shown after eKYC submission) -->
                         <div id="importerVideoCallRequestCard" class="video-call-request-card" style="display: none;">
                             <div class="video-call-request-content">
                                 <div class="request-icon">📹</div>
                                 <div class="request-text">
                                     <h3>Complete Your Verification</h3>
-                                    <p>Schedule a video call with our agent to verify your identity and complete your eKYC.</p>
+                                    <p>Schedule a video call with our agent to verify your identity and complete your
+                                        eKYC.</p>
                                 </div>
-                                <button class="btn-request-call" onclick="requestImporterVideoCall()">Request Video Call</button>
+                                <button class="btn-request-call" onclick="requestImporterVideoCall()">Request Video
+                                    Call</button>
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="summary-grid">
                         <article class="summary-card">
                             <p>Active Shipments</p>
@@ -254,7 +304,8 @@
                     </div>
                 </section>
 
-                <section class="content-section" id="shipmentsSection" data-section="shipments" role="tabpanel" aria-labelledby="tab-shipments" tabindex="0" hidden>
+                <section class="content-section" id="shipmentsSection" data-section="shipments" role="tabpanel"
+                    aria-labelledby="tab-shipments" tabindex="0" hidden>
                     <div class="panel-card">
                         <header>
                             <div>
@@ -274,7 +325,8 @@
                     </div>
                 </section>
 
-                <section class="content-section" id="documentsSection" data-section="documents" role="tabpanel" aria-labelledby="tab-documents" tabindex="0" hidden>
+                <section class="content-section" id="documentsSection" data-section="documents" role="tabpanel"
+                    aria-labelledby="tab-documents" tabindex="0" hidden>
                     <div class="documents-header">
                         <div class="documents-title">
                             <h2>Document Library</h2>
@@ -282,7 +334,8 @@
                         </div>
                         <div class="documents-actions">
                             <div class="documents-search">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
                                     <circle cx="11" cy="11" r="8"></circle>
                                     <path d="m21 21-4.35-4.35"></path>
                                 </svg>
@@ -342,30 +395,116 @@
                             <div class="document-related-header">
                                 <div>
                                     <h3>Country & Port Requirements</h3>
-                                    <p>Cross-check official import/export documents per corridor using trusted government sources.</p>
+                                    <p>Cross-check official import/export documents per corridor using trusted
+                                        government sources.</p>
                                 </div>
                                 <div class="document-related-controls">
                                     <div class="form-group">
                                         <label for="importerDocCountrySelect">Country</label>
-                                        <select id="importerDocCountrySelect" aria-label="Select country for requirements"></select>
+                                        <select id="importerDocCountrySelect"
+                                            aria-label="Select country for requirements"></select>
                                     </div>
                                     <div class="form-group">
                                         <label for="importerDocModeSelect">Mode</label>
                                         <select id="importerDocModeSelect" aria-label="Select transport mode"></select>
                                     </div>
-                                    <button class="btn-secondary" type="button" onclick="generateImporterDocumentChecklist()" aria-label="Generate document checklist">
+                                    <button class="btn-secondary" type="button"
+                                        onclick="generateImporterDocumentChecklist()"
+                                        aria-label="Generate document checklist">
                                         Generate Checklist
                                     </button>
                                 </div>
                             </div>
 
-                            <div id="importerDocRequirementsTable" class="doc-requirements-table" role="region" aria-live="polite"></div>
-                            <div id="importerDocChecklistResult" class="doc-checklist-result" role="status" aria-live="polite"></div>
+                            <div id="importerDocRequirementsTable" class="doc-requirements-table" role="region"
+                                aria-live="polite"></div>
+                            <div id="importerDocChecklistResult" class="doc-checklist-result" role="status"
+                                aria-live="polite"></div>
                         </div>
                     </section>
                 </section>
 
-                <section class="content-section" id="paymentsSection" data-section="payments" role="tabpanel" aria-labelledby="tab-payments" tabindex="0" hidden>
+                <!-- Forward Contracts Section -->
+                <section class="content-section" id="contractsSection" data-section="contracts" role="tabpanel"
+                    aria-labelledby="tab-contracts" tabindex="0" hidden>
+                    <div class="forward-contract-container">
+                        <header class="forward-contract-hero">
+                            <div class="forward-contract-hero-icon">💱</div>
+                            <h2>Forward Contract Note Generator</h2>
+                            <p class="forward-contract-subheadline">Analyze FX trends, volatility, and risk tolerance to determine the optimal time to lock a forward contract.</p>
+                        </header>
+
+                        <main class="forward-contract-main-content">
+                            <div class="forward-contract-form-card">
+                                <div class="forward-contract-card-header">
+                                    <h3>Contract Details</h3>
+                                </div>
+                                <form id="importerForwardContractForm" class="forward-contract-form">
+                                    <div class="forward-contract-form-row">
+                                        <div class="forward-contract-form-group">
+                                            <label for="importerForwardContractAmount">
+                                                <span class="forward-contract-label-icon">💰</span>
+                                                Amount
+                                            </label>
+                                            <input type="number" id="importerForwardContractAmount" name="amount" placeholder="Enter amount" required>
+                                        </div>
+
+                                        <div class="forward-contract-form-group">
+                                            <label for="importerForwardContractSettlementDate">
+                                                <span class="forward-contract-label-icon">📅</span>
+                                                Settlement Date
+                                            </label>
+                                            <input type="date" id="importerForwardContractSettlementDate" name="settlementDate" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="forward-contract-form-row">
+                                        <div class="forward-contract-form-group">
+                                            <label for="importerForwardContractRiskTolerance">
+                                                <span class="forward-contract-label-icon">⚡</span>
+                                                Risk Tolerance
+                                            </label>
+                                            <select id="importerForwardContractRiskTolerance" name="riskTolerance" required>
+                                                <option value="">Select risk tolerance</option>
+                                                <option value="low">Low</option>
+                                                <option value="medium">Medium</option>
+                                                <option value="high">High</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="forward-contract-form-group">
+                                            <label for="importerForwardContractCurrencyPair">
+                                                <span class="forward-contract-label-icon">🌍</span>
+                                                Currency Pair
+                                            </label>
+                                            <select id="importerForwardContractCurrencyPair" name="currencyPair" required>
+                                                <option value="">Select currency pair</option>
+                                                <option value="USD/EUR">USD/EUR</option>
+                                                <option value="USD/GBP">USD/GBP</option>
+                                                <option value="USD/JPY">USD/JPY</option>
+                                                <option value="USD/INR">USD/INR</option>
+                                                <option value="EUR/GBP">EUR/GBP</option>
+                                                <option value="EUR/JPY">EUR/JPY</option>
+                                                <option value="GBP/JPY">GBP/JPY</option>
+                                            </select>
+                                            <div id="importerForwardContractCurrencyPrice" class="forward-contract-currency-price"></div>
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="forward-contract-generate-btn">
+                                        <span>Generate Forward Contract Note</span>
+                                        <span class="forward-contract-btn-arrow">→</span>
+                                    </button>
+                                </form>
+                            </div>
+
+                            <div id="importerForwardContractResults" class="forward-contract-results-section"></div>
+                        </main>
+                    </div>
+                </section>
+
+                <section class="content-section" id="paymentsSection" data-section="payments" role="tabpanel"
+                    aria-labelledby="tab-payments" tabindex="0" hidden>
                     <div class="panel-card">
                         <header>
                             <div>
@@ -376,7 +515,8 @@
                         <div class="payments-layout">
                             <form id="paymentForm" class="payment-form">
                                 <label>Payable Amount
-                                    <input type="number" name="amount" min="0" step="0.01" required placeholder="Enter amount">
+                                    <input type="number" name="amount" min="0" step="0.01" required
+                                        placeholder="Enter amount">
                                 </label>
                                 <label>Currency
                                     <select name="currency" id="paymentCurrency" required>
@@ -393,7 +533,9 @@
                                     <p>Live exchange rate: <span id="paymentLiveRate">--</span></p>
                                     <div id="paymentFeeBreakdown" class="fee-breakdown"></div>
                                 </div>
-                                <button type="submit" class="btn-primary full-width">Proceed to Pay</button>
+                                <button type="submit" class="btn-primary full-width " style="    width: 140px;
+                                padding: 7px;
+                                border-radius: 5px;">Proceed to Pay</button>
                             </form>
                             <div class="payment-history">
                                 <h3>Payment History</h3>
@@ -403,12 +545,14 @@
                     </div>
                 </section>
 
-                <section class="content-section" id="disputesSection" data-section="disputes" role="tabpanel" aria-labelledby="tab-disputes" tabindex="0" hidden>
+                <section class="content-section" id="disputesSection" data-section="disputes" role="tabpanel"
+                    aria-labelledby="tab-disputes" tabindex="0" hidden>
                     <div class="panel-card">
                         <header>
                             <div>
                                 <h2>Raise a Dispute</h2>
-                                <p>If there is an issue with goods, documents, payments, or shipment damage, raise a dispute.</p>
+                                <p>If there is an issue with goods, documents, payments, or shipment damage, raise a
+                                    dispute.</p>
                             </div>
                         </header>
                         <form id="disputeForm" class="dispute-form">
@@ -422,9 +566,12 @@
                                 </select>
                             </label>
                             <label>Description
-                                <textarea name="description" rows="4" required placeholder="Describe the issue"></textarea>
+                                <textarea name="description" rows="4" required
+                                    placeholder="Describe the issue"></textarea>
                             </label>
-                            <button type="submit" class="btn-primary">Raise Dispute Now</button>
+                            <button type="submit" class="btn-primary" style="    width: 140px;
+                            padding: 7px;
+                            border-radius: 5px;">Raise Dispute Now</button>
                         </form>
                         <div class="history-card">
                             <h3>Dispute History</h3>
@@ -433,7 +580,8 @@
                     </div>
                 </section>
 
-                <section class="content-section" id="supportSection" data-section="support" role="tabpanel" aria-labelledby="tab-support" tabindex="0" hidden>
+                <section class="content-section" id="supportSection" data-section="support" role="tabpanel"
+                    aria-labelledby="tab-support" tabindex="0" hidden>
                     <div class="panel-card">
                         <header>
                             <div>
@@ -457,7 +605,8 @@
                     </div>
                 </section>
 
-                <section class="content-section" id="ordersSection" data-section="orders" role="tabpanel" aria-labelledby="tab-orders" tabindex="0" hidden>
+                <section class="content-section" id="ordersSection" data-section="orders" role="tabpanel"
+                    aria-labelledby="tab-orders" tabindex="0" hidden>
                     <div class="panel-card">
                         <header>
                             <div>
@@ -469,7 +618,8 @@
                     </div>
                 </section>
 
-                <section class="content-section" id="notificationsSection" data-section="notifications" role="tabpanel" aria-labelledby="tab-notifications" tabindex="0" hidden>
+                <section class="content-section" id="notificationsSection" data-section="notifications" role="tabpanel"
+                    aria-labelledby="tab-notifications" tabindex="0" hidden>
                     <div class="panel-card">
                         <header>
                             <div>
@@ -481,7 +631,8 @@
                     </div>
                 </section>
 
-                <section class="content-section" id="profileSection" data-section="profile" role="tabpanel" aria-labelledby="tab-profile" tabindex="0" hidden>
+                <section class="content-section" id="profileSection" data-section="profile" role="tabpanel"
+                    aria-labelledby="tab-profile" tabindex="0" hidden>
                     <div class="panel-card">
                         <header>
                             <div>
@@ -510,15 +661,17 @@
                     </div>
                 </section>
 
-                <section class="content-section" id="cartSection" data-section="cart" role="tabpanel" aria-labelledby="tab-cart" tabindex="0" hidden>
+                <section class="content-section" id="cartSection" data-section="cart" role="tabpanel"
+                    aria-labelledby="tab-cart" tabindex="0" hidden>
                     <div class="panel-card">
                         <header>
                             <div>
                                 <h2>Shopping Cart</h2>
                                 <p>Products you've added from the marketplace</p>
                             </div>
-                            <a href="../marketplace/marketplace.html" target="_blank" class="btn-secondary">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <a href="../marketplace/marketplace.html" target="_blank" class="btn-secondary" style="text-decoration: none;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
                                     <path d="M3 7h18"></path>
                                     <path d="M6 7V3h12v4"></path>
                                     <path d="M5 7l1.68 12.06A2 2 0 0 0 8.66 21h6.68a2 2 0 0 0 1.98-1.94L19 7"></path>
@@ -531,17 +684,21 @@
                                 <div class="empty-icon">🛒</div>
                                 <h3>Your cart is empty</h3>
                                 <p>Add products from the marketplace to see them here</p>
-                                <a href="../marketplace/marketplace.html" target="_blank" class="btn-primary" style="margin-top: 1rem; display: inline-block;">
+                                <a href="../marketplace/marketplace.html" target="_blank" class="btn-primary cart-btn"
+                                    style="margin-top: 1rem; display: inline-block;">
                                     Go to Marketplace
                                 </a>
                             </div>
                         </div>
-                        <div id="importerCartFooter" style="display: none; margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e0e0e0;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <div id="importerCartFooter"
+                            style="display: none; margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e0e0e0;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                                 <span style="font-size: 1.25rem; font-weight: 600;">Total:</span>
                                 <strong id="importerCartTotal" style="font-size: 1.5rem; color: #667eea;">$0.00</strong>
                             </div>
-                            <button class="btn-primary full-width" onclick="proceedImporterCheckout()">Proceed to Checkout</button>
+                            <button class="btn-primary full-width" onclick="proceedImporterCheckout()">Proceed to
+                                Checkout</button>
                         </div>
                     </div>
                 </section>
@@ -552,7 +709,8 @@
     <div id="importerToast" class="toast"></div>
 
     <!-- Profile Modal -->
-    <div id="importerProfileModal" class="profile-modal" role="dialog" aria-labelledby="importerProfileModalTitle" aria-hidden="true">
+    <div id="importerProfileModal" class="profile-modal" role="dialog" aria-labelledby="importerProfileModalTitle"
+        aria-hidden="true">
         <div class="profile-modal-overlay" onclick="closeImporterProfileModal()"></div>
         <div class="profile-modal-container">
             <button class="profile-modal-close" onclick="closeImporterProfileModal()" aria-label="Close modal">
@@ -561,7 +719,7 @@
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
             </button>
-            
+
             <div class="profile-modal-content">
                 <div class="profile-modal-header">
                     <h2 id="importerProfileModalTitle">Importer Profile Settings</h2>
@@ -570,14 +728,22 @@
 
                 <!-- Profile Tabs -->
                 <div class="profile-tabs">
-                    <button class="profile-tab active" data-section="basic" onclick="switchImporterProfileTab('basic')">Basic Info</button>
-                    <button class="profile-tab" data-section="business" onclick="switchImporterProfileTab('business')">Business</button>
-                    <button class="profile-tab" data-section="compliance" onclick="switchImporterProfileTab('compliance')">Compliance</button>
-                    <button class="profile-tab" data-section="import" onclick="switchImporterProfileTab('import')">Import Details</button>
-                    <button class="profile-tab" data-section="address" onclick="switchImporterProfileTab('address')">Address</button>
-                    <button class="profile-tab" data-section="banking" onclick="switchImporterProfileTab('banking')">Banking</button>
-                    <button class="profile-tab" data-section="documents" onclick="switchImporterProfileTab('documents')">Documents</button>
-                    <button class="profile-tab" data-section="settings" onclick="switchImporterProfileTab('settings')">Settings</button>
+                    <button class="profile-tab active" data-section="basic"
+                        onclick="switchImporterProfileTab('basic')">Basic Info</button>
+                    <button class="profile-tab" data-section="business"
+                        onclick="switchImporterProfileTab('business')">Business</button>
+                    <button class="profile-tab" data-section="compliance"
+                        onclick="switchImporterProfileTab('compliance')">Compliance</button>
+                    <button class="profile-tab" data-section="import"
+                        onclick="switchImporterProfileTab('import')">Import Details</button>
+                    <button class="profile-tab" data-section="address"
+                        onclick="switchImporterProfileTab('address')">Address</button>
+                    <button class="profile-tab" data-section="banking"
+                        onclick="switchImporterProfileTab('banking')">Banking</button>
+                    <button class="profile-tab" data-section="documents"
+                        onclick="switchImporterProfileTab('documents')">Documents</button>
+                    <button class="profile-tab" data-section="settings"
+                        onclick="switchImporterProfileTab('settings')">Settings</button>
                 </div>
 
                 <!-- Profile Sections -->
@@ -594,10 +760,12 @@
                                 <label for="importerProfilePhoto">Profile Photo</label>
                                 <div class="photo-upload-wrapper">
                                     <div class="photo-preview" id="importerPhotoPreview">
-                                        <img id="importerPhotoPreviewImg" src="" alt="Profile photo" style="display: none;">
+                                        <img id="importerPhotoPreviewImg" src="" alt="Profile photo"
+                                            style="display: none;">
                                         <span id="importerPhotoPreviewText">No photo</span>
                                     </div>
-                                    <input type="file" id="importerProfilePhoto" name="profilePhoto" accept="image/*" onchange="handleImporterPhotoUpload(event)">
+                                    <input type="file" id="importerProfilePhoto" name="profilePhoto" accept="image/*"
+                                        onchange="handleImporterPhotoUpload(event)">
                                     <label for="importerProfilePhoto" class="upload-btn">Upload Photo</label>
                                 </div>
                             </div>
@@ -638,7 +806,8 @@
                             </div>
                             <div class="form-group">
                                 <label for="importerYearEstablished">Year of Establishment *</label>
-                                <input type="number" id="importerYearEstablished" name="yearEstablished" min="1900" max="2025" required>
+                                <input type="number" id="importerYearEstablished" name="yearEstablished" min="1900"
+                                    max="2025" required>
                             </div>
                             <div class="form-group">
                                 <label for="importerBusinessCategory">Business Category *</label>
@@ -654,11 +823,13 @@
                             </div>
                             <div class="form-group">
                                 <label for="importerCompanyWebsite">Company Website</label>
-                                <input type="url" id="importerCompanyWebsite" name="companyWebsite" placeholder="https://example.com">
+                                <input type="url" id="importerCompanyWebsite" name="companyWebsite"
+                                    placeholder="https://example.com">
                             </div>
                             <div class="form-group">
                                 <label for="importerCompanyDescription">Company Description</label>
-                                <textarea id="importerCompanyDescription" name="companyDescription" rows="4" placeholder="Brief description of your company"></textarea>
+                                <textarea id="importerCompanyDescription" name="companyDescription" rows="4"
+                                    placeholder="Brief description of your company"></textarea>
                             </div>
                             <button type="submit" class="btn-save">Save Changes</button>
                         </form>
@@ -742,7 +913,8 @@
                             </div>
                             <div class="form-group">
                                 <label for="importerMonthlyVolume">Average Monthly Import Volume</label>
-                                <input type="text" id="importerMonthlyVolume" name="monthlyVolume" placeholder="e.g., 100 units, 50 containers">
+                                <input type="text" id="importerMonthlyVolume" name="monthlyVolume"
+                                    placeholder="e.g., 100 units, 50 containers">
                             </div>
                             <div class="form-group">
                                 <label for="importerShippingMethod">Preferred Shipping Method *</label>
@@ -764,7 +936,8 @@
                         <form id="importerAddressForm" onsubmit="saveImporterAddressInfo(event)">
                             <div class="form-group">
                                 <label for="importerBusinessAddress">Registered Business Address *</label>
-                                <textarea id="importerBusinessAddress" name="businessAddress" rows="3" required></textarea>
+                                <textarea id="importerBusinessAddress" name="businessAddress" rows="3"
+                                    required></textarea>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
@@ -832,9 +1005,12 @@
                                 <div class="document-upload-item">
                                     <label for="importerIecCertificate">IEC Certificate</label>
                                     <div class="file-upload-wrapper">
-                                        <input type="file" id="importerIecCertificate" name="iecCertificate" accept=".pdf,.jpg,.jpeg,.png" onchange="handleImporterDocumentUpload(event, 'importerIecCertificate')">
+                                        <input type="file" id="importerIecCertificate" name="iecCertificate"
+                                            accept=".pdf,.jpg,.jpeg,.png"
+                                            onchange="handleImporterDocumentUpload(event, 'importerIecCertificate')">
                                         <label for="importerIecCertificate" class="file-upload-btn">
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
                                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                                 <polyline points="17 8 12 3 7 8"></polyline>
                                                 <line x1="12" y1="3" x2="12" y2="15"></line>
@@ -847,9 +1023,12 @@
                                 <div class="document-upload-item">
                                     <label for="importerGstCertificate">GST Certificate</label>
                                     <div class="file-upload-wrapper">
-                                        <input type="file" id="importerGstCertificate" name="gstCertificate" accept=".pdf,.jpg,.jpeg,.png" onchange="handleImporterDocumentUpload(event, 'importerGstCertificate')">
+                                        <input type="file" id="importerGstCertificate" name="gstCertificate"
+                                            accept=".pdf,.jpg,.jpeg,.png"
+                                            onchange="handleImporterDocumentUpload(event, 'importerGstCertificate')">
                                         <label for="importerGstCertificate" class="file-upload-btn">
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
                                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                                 <polyline points="17 8 12 3 7 8"></polyline>
                                                 <line x1="12" y1="3" x2="12" y2="15"></line>
@@ -862,9 +1041,12 @@
                                 <div class="document-upload-item">
                                     <label for="importerCompanyRegistration">Company Registration Certificate</label>
                                     <div class="file-upload-wrapper">
-                                        <input type="file" id="importerCompanyRegistration" name="companyRegistration" accept=".pdf,.jpg,.jpeg,.png" onchange="handleImporterDocumentUpload(event, 'importerCompanyRegistration')">
+                                        <input type="file" id="importerCompanyRegistration" name="companyRegistration"
+                                            accept=".pdf,.jpg,.jpeg,.png"
+                                            onchange="handleImporterDocumentUpload(event, 'importerCompanyRegistration')">
                                         <label for="importerCompanyRegistration" class="file-upload-btn">
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
                                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                                 <polyline points="17 8 12 3 7 8"></polyline>
                                                 <line x1="12" y1="3" x2="12" y2="15"></line>
@@ -877,9 +1059,12 @@
                                 <div class="document-upload-item">
                                     <label for="importerOwnerIdProof">Owner ID Proof (Aadhar/Passport)</label>
                                     <div class="file-upload-wrapper">
-                                        <input type="file" id="importerOwnerIdProof" name="ownerIdProof" accept=".pdf,.jpg,.jpeg,.png" onchange="handleImporterDocumentUpload(event, 'importerOwnerIdProof')">
+                                        <input type="file" id="importerOwnerIdProof" name="ownerIdProof"
+                                            accept=".pdf,.jpg,.jpeg,.png"
+                                            onchange="handleImporterDocumentUpload(event, 'importerOwnerIdProof')">
                                         <label for="importerOwnerIdProof" class="file-upload-btn">
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
                                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                                 <polyline points="17 8 12 3 7 8"></polyline>
                                                 <line x1="12" y1="3" x2="12" y2="15"></line>
@@ -892,9 +1077,12 @@
                                 <div class="document-upload-item">
                                     <label for="importerAddressProof">Address Proof</label>
                                     <div class="file-upload-wrapper">
-                                        <input type="file" id="importerAddressProof" name="addressProof" accept=".pdf,.jpg,.jpeg,.png" onchange="handleImporterDocumentUpload(event, 'importerAddressProof')">
+                                        <input type="file" id="importerAddressProof" name="addressProof"
+                                            accept=".pdf,.jpg,.jpeg,.png"
+                                            onchange="handleImporterDocumentUpload(event, 'importerAddressProof')">
                                         <label for="importerAddressProof" class="file-upload-btn">
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
                                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                                 <polyline points="17 8 12 3 7 8"></polyline>
                                                 <line x1="12" y1="3" x2="12" y2="15"></line>
@@ -950,7 +1138,8 @@
     </div>
 
     <!-- eKYC Modal -->
-    <div id="importerEkycModal" class="ekyc-modal" role="dialog" aria-labelledby="importerEkycModalTitle" aria-hidden="true">
+    <div id="importerEkycModal" class="ekyc-modal" role="dialog" aria-labelledby="importerEkycModalTitle"
+        aria-hidden="true">
         <div class="ekyc-modal-overlay" onclick="closeImporterEKYCModal()"></div>
         <div class="ekyc-modal-container">
             <button class="ekyc-modal-close" onclick="closeImporterEKYCModal()" aria-label="Close modal">
@@ -959,7 +1148,7 @@
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
             </button>
-            
+
             <div class="ekyc-modal-content">
                 <div class="ekyc-modal-header">
                     <h2 id="importerEkycModalTitle">Verify Your Identity (eKYC)</h2>
@@ -972,16 +1161,20 @@
                         <h3>Identity Proof</h3>
                         <div class="form-group">
                             <label for="importerIdentityProofType">Select ID Proof *</label>
-                            <select id="importerIdentityProofType" name="identityProofType" required onchange="handleImporterIdentityProofChange()">
+                            <select id="importerIdentityProofType" name="identityProofType" required
+                                onchange="handleImporterIdentityProofChange()">
                                 <option value="">Select ID Proof</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label for="importerIdentityProofFile">Upload ID Proof *</label>
                             <div class="file-upload-wrapper">
-                                <input type="file" id="importerIdentityProofFile" name="identityProofFile" accept=".pdf,.jpg,.jpeg,.png" required onchange="handleImporterFilePreview(event, 'importerIdentityProof')">
+                                <input type="file" id="importerIdentityProofFile" name="identityProofFile"
+                                    accept=".pdf,.jpg,.jpeg,.png" required
+                                    onchange="handleImporterFilePreview(event, 'importerIdentityProof')">
                                 <label for="importerIdentityProofFile" class="file-upload-btn">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                         <polyline points="17 8 12 3 7 8"></polyline>
                                         <line x1="12" y1="3" x2="12" y2="15"></line>
@@ -1005,9 +1198,12 @@
                         <div class="form-group">
                             <label for="importerBusinessProofFile">Upload Business Proof *</label>
                             <div class="file-upload-wrapper">
-                                <input type="file" id="importerBusinessProofFile" name="businessProofFile" accept=".pdf,.jpg,.jpeg,.png" required onchange="handleImporterFilePreview(event, 'importerBusinessProof')">
+                                <input type="file" id="importerBusinessProofFile" name="businessProofFile"
+                                    accept=".pdf,.jpg,.jpeg,.png" required
+                                    onchange="handleImporterFilePreview(event, 'importerBusinessProof')">
                                 <label for="importerBusinessProofFile" class="file-upload-btn">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                         <polyline points="17 8 12 3 7 8"></polyline>
                                         <line x1="12" y1="3" x2="12" y2="15"></line>
@@ -1031,9 +1227,12 @@
                         <div class="form-group">
                             <label for="importerBankProofFile">Upload Bank Proof *</label>
                             <div class="file-upload-wrapper">
-                                <input type="file" id="importerBankProofFile" name="bankProofFile" accept=".pdf,.jpg,.jpeg,.png" required onchange="handleImporterFilePreview(event, 'importerBankProof')">
+                                <input type="file" id="importerBankProofFile" name="bankProofFile"
+                                    accept=".pdf,.jpg,.jpeg,.png" required
+                                    onchange="handleImporterFilePreview(event, 'importerBankProof')">
                                 <label for="importerBankProofFile" class="file-upload-btn">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                         <polyline points="17 8 12 3 7 8"></polyline>
                                         <line x1="12" y1="3" x2="12" y2="15"></line>
@@ -1051,25 +1250,34 @@
                         <div class="form-group">
                             <label>Capture Live Selfie *</label>
                             <div class="camera-capture-wrapper">
-                                <div class="camera-preview-container" id="importerCameraPreviewContainer" style="display: none;">
-                                    <video id="importerCameraVideo" autoplay playsinline style="width: 100%; max-width: 400px; border-radius: 8px; background: #000;"></video>
+                                <div class="camera-preview-container" id="importerCameraPreviewContainer"
+                                    style="display: none;">
+                                    <video id="importerCameraVideo" autoplay playsinline
+                                        style="width: 100%; max-width: 400px; border-radius: 8px; background: #000;"></video>
                                     <canvas id="importerCameraCanvas" style="display: none;"></canvas>
                                 </div>
                                 <div class="camera-controls">
-                                    <button type="button" class="btn-camera" id="importerStartCameraBtn" onclick="startImporterCamera()">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                                    <button type="button" class="btn-camera" id="importerStartCameraBtn"
+                                        onclick="startImporterCamera()">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <path
+                                                d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z">
+                                            </path>
                                             <circle cx="12" cy="13" r="4"></circle>
                                         </svg>
                                         Open Camera
                                     </button>
-                                    <button type="button" class="btn-capture" id="importerCaptureBtn" onclick="captureImporterSelfie()" style="display: none;">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <button type="button" class="btn-capture" id="importerCaptureBtn"
+                                        onclick="captureImporterSelfie()" style="display: none;">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
                                             <circle cx="12" cy="12" r="10"></circle>
                                         </svg>
                                         Capture Photo
                                     </button>
-                                    <button type="button" class="btn-cancel-camera" id="importerCancelCameraBtn" onclick="stopImporterCamera()" style="display: none;">
+                                    <button type="button" class="btn-cancel-camera" id="importerCancelCameraBtn"
+                                        onclick="stopImporterCamera()" style="display: none;">
                                         Cancel
                                     </button>
                                 </div>
@@ -1093,7 +1301,8 @@
     </div>
 
     <!-- Video Call Verification Modal -->
-    <div id="importerVideoCallModal" class="video-call-modal" role="dialog" aria-labelledby="importerVideoCallModalTitle" aria-hidden="true">
+    <div id="importerVideoCallModal" class="video-call-modal" role="dialog"
+        aria-labelledby="importerVideoCallModalTitle" aria-hidden="true">
         <div class="video-call-modal-overlay"></div>
         <div class="video-call-modal-container">
             <div class="video-call-header">
@@ -1105,7 +1314,7 @@
                     </svg>
                 </button>
             </div>
-            
+
             <div class="video-call-content">
                 <!-- Waiting for Agent -->
                 <div id="importerWaitingForAgent" class="video-call-status">
@@ -1129,19 +1338,24 @@
                     </div>
                     <div class="video-controls">
                         <button class="video-control-btn" id="importerMuteBtn" onclick="toggleImporterMute()">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
                             </svg>
                         </button>
                         <button class="video-control-btn" id="importerVideoBtn" onclick="toggleImporterVideo()">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M23 7l-7 5 7 5V7z"></path>
                                 <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
                             </svg>
                         </button>
                         <button class="video-control-btn end-call" onclick="endImporterVideoCall()">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                                </path>
                             </svg>
                         </button>
                     </div>
@@ -1151,13 +1365,15 @@
                 <div id="importerCallEnded" class="video-call-status" style="display: none;">
                     <div class="status-icon">✓</div>
                     <h3>Verification Complete</h3>
-                    <p id="importerCallEndedMessage">Your verification is being processed. You will be notified once it's complete.</p>
+                    <p id="importerCallEndedMessage">Your verification is being processed. You will be notified once
+                        it's complete.</p>
                 </div>
             </div>
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="importer-dashboard.js"></script>
 </body>
-</html>
 
+</html>
