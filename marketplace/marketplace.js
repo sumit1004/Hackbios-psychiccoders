@@ -867,35 +867,61 @@ async function updateCartQuantity(productId, change) {
 }
 
 /**
- * Save cart to Firebase
+ * Save cart to Firebase and localStorage
  */
 async function saveCart() {
-    if (!currentUser || !currentUserType) return;
+    // Always save to localStorage as backup
+    try {
+        localStorage.setItem('checkout_cart', JSON.stringify(cart));
+    } catch (e) {
+        console.warn('Could not save cart to localStorage:', e);
+    }
+
+    if (!currentUser || !currentUserType) {
+        console.warn('User not authenticated, cart saved to localStorage only');
+        return;
+    }
 
     try {
         const db = currentUserType === 'exporter' ? database : importerDatabase;
         if (!db) {
-            console.warn('Database not initialized');
+            console.warn('Database not initialized, cart saved to localStorage only');
             return;
         }
 
         const cartPath = `users/${currentUser.uid}/cart`;
         await db.ref(cartPath).set(cart);
     } catch (error) {
-        console.error('Error saving cart:', error);
+        console.error('Error saving cart to Firebase:', error);
         if (error.code === 'PERMISSION_DENIED' || error.message?.includes('permission')) {
-            console.warn('Cart save permission denied. Make sure Firebase rules allow users to write their own cart.');
-            showToast('Unable to save cart. Please check your permissions.', 'error');
+            console.warn('Cart save permission denied. Cart saved to localStorage only. Please check Firebase rules.');
+            // Don't show error toast since we have localStorage backup
         }
     }
 }
 
 /**
- * Load cart from Firebase
+ * Load cart from Firebase with localStorage fallback
  */
 async function loadCart() {
+    // Try to load from localStorage first as fallback
+    let cartFromLocalStorage = null;
+    try {
+        const savedCart = localStorage.getItem('checkout_cart');
+        if (savedCart) {
+            cartFromLocalStorage = JSON.parse(savedCart);
+        }
+    } catch (e) {
+        console.warn('Error loading cart from localStorage:', e);
+    }
+
     if (!currentUser || !currentUserType) {
-        cart = [];
+        // Use localStorage cart if available
+        if (cartFromLocalStorage && Array.isArray(cartFromLocalStorage)) {
+            cart = cartFromLocalStorage;
+        } else {
+            cart = [];
+        }
         updateCartDisplay();
         return;
     }
@@ -904,7 +930,12 @@ async function loadCart() {
         const db = currentUserType === 'exporter' ? database : importerDatabase;
         if (!db) {
             console.warn('Database not initialized');
-            cart = [];
+            // Use localStorage cart if available
+            if (cartFromLocalStorage && Array.isArray(cartFromLocalStorage)) {
+                cart = cartFromLocalStorage;
+            } else {
+                cart = [];
+            }
             updateCartDisplay();
             return;
         }
@@ -918,17 +949,45 @@ async function loadCart() {
             } else {
                 cart = Object.values(cartData);
             }
+            // Update localStorage with Firebase data
+            try {
+                localStorage.setItem('checkout_cart', JSON.stringify(cart));
+            } catch (e) {
+                console.warn('Could not save cart to localStorage:', e);
+            }
         } else {
-            cart = [];
+            // If Firebase has no cart, use localStorage if available
+            if (cartFromLocalStorage && Array.isArray(cartFromLocalStorage)) {
+                cart = cartFromLocalStorage;
+                // Try to sync back to Firebase
+                try {
+                    await db.ref(`users/${currentUser.uid}/cart`).set(cart);
+                } catch (e) {
+                    console.warn('Could not sync cart to Firebase:', e);
+                }
+            } else {
+                cart = [];
+            }
         }
         
         updateCartDisplay();
     } catch (error) {
         console.error('Error loading cart:', error);
         if (error.code === 'PERMISSION_DENIED' || error.message?.includes('permission')) {
-            console.warn('Cart permission denied. Make sure Firebase rules allow users to read/write their own cart.');
+            console.warn('Cart permission denied. Using localStorage cart if available.');
+            // Use localStorage cart as fallback
+            if (cartFromLocalStorage && Array.isArray(cartFromLocalStorage)) {
+                cart = cartFromLocalStorage;
+                updateCartDisplay();
+                return;
+            }
         }
-        cart = [];
+        // Final fallback to localStorage
+        if (cartFromLocalStorage && Array.isArray(cartFromLocalStorage)) {
+            cart = cartFromLocalStorage;
+        } else {
+            cart = [];
+        }
         updateCartDisplay();
     }
 }
@@ -1159,8 +1218,8 @@ function proceedToCheckout() {
         return;
     }
 
-    // Redirect to dashboard where cart items will be shown
-    goToDashboard();
+    // Redirect to checkout page
+    window.location.href = 'checkout.html';
 }
 
 /**

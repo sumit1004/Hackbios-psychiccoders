@@ -242,12 +242,18 @@
     function bindRealtime(path, handler) {
         if (!importerDatabase) return;
         const ref = importerDatabase.ref(path);
-        const listener = snapshot => handler(snapshot.val());
+        const listener = snapshot => {
+            const data = snapshot.val();
+            // Ensure we always pass an object, never null
+            handler(data || {});
+        };
         const errorHandler = error => {
             console.error(`Error binding to ${path}:`, error);
             if (error.code === 'PERMISSION_DENIED' || error.code === 'permission_denied') {
                 console.warn(`Permission denied for ${path}. Please configure Firebase security rules.`);
             }
+            // Call handler with empty object on error to prevent null errors
+            handler({});
         };
         ref.on('value', listener, errorHandler);
         realtimeBindings.push({ ref, listener, errorHandler });
@@ -258,6 +264,11 @@
     }
 
     function renderSummaryCards(data = {}) {
+        // Ensure data is always an object, never null
+        if (!data || typeof data !== 'object') {
+            data = {};
+        }
+
         document.getElementById('summaryActiveShipments').textContent = data.activeShipments ?? 0;
         document.getElementById('summaryPendingPayments').textContent = data.pendingPayments ?? 0;
         document.getElementById('summaryPendingVerification').textContent = data.pendingVerification ?? 0;
@@ -265,6 +276,11 @@
     }
 
     function renderShipments(data) {
+        // Ensure data is always an object or array, never null
+        if (data === null || data === undefined) {
+            data = {};
+        }
+
         const container = document.getElementById('shipmentsList');
         if (!container) return;
         container.innerHTML = '';
@@ -293,6 +309,11 @@
     }
 
     function renderDocumentsSection(data = {}) {
+        // Ensure data is always an object, never null
+        if (!data || typeof data !== 'object') {
+            data = {};
+        }
+
         const list = document.getElementById('documentsList');
         if (!list) return;
         list.innerHTML = '';
@@ -302,7 +323,8 @@
         if (viewBtn) viewBtn.dataset.url = data.viewUrl || '';
         if (downloadBtn) downloadBtn.dataset.url = data.downloadUrl || '';
 
-        const documents = convertToArray(data.files);
+        // Safely access files property
+        const documents = convertToArray(data && data.files ? data.files : null);
         const template = documents.length ? documents : defaultDocumentTypes.map(type => ({ type, status: 'Waiting for upload' }));
 
         template.forEach(doc => {
@@ -318,6 +340,11 @@
     }
 
     function renderPaymentPanel(data = {}) {
+        // Ensure data is always an object, never null
+        if (!data || typeof data !== 'object') {
+            data = {};
+        }
+
         const liveRateEl = document.getElementById('paymentLiveRate');
         if (liveRateEl) {
             liveRateEl.textContent = data.liveRate ? `${data.liveRate.value} ${data.liveRate.pair || ''}` : '--';
@@ -341,7 +368,8 @@
         const historyList = document.getElementById('paymentHistoryList');
         if (historyList) {
             historyList.innerHTML = '';
-            const history = convertToArray(data.history);
+            // Safely access history property
+            const history = convertToArray(data && data.history ? data.history : null);
             if (!history.length) {
                 historyList.innerHTML = emptyState('No payments recorded yet.');
             } else {
@@ -360,10 +388,16 @@
     }
 
     function renderDisputeHistory(data = {}) {
+        // Ensure data is always an object, never null
+        if (!data || typeof data !== 'object') {
+            data = {};
+        }
+
         const list = document.getElementById('disputeHistoryList');
         if (!list) return;
         list.innerHTML = '';
-        const disputes = convertToArray(data.history);
+        // Safely access history property
+        const disputes = convertToArray(data && data.history ? data.history : null);
         if (!disputes.length) {
             list.innerHTML = emptyState('No disputes raised yet.');
             return;
@@ -381,12 +415,18 @@
     }
 
     function renderSupportModule(data = {}) {
+        // Ensure data is always an object, never null
+        if (!data || typeof data !== 'object') {
+            data = {};
+        }
+
         const chatLog = document.getElementById('supportChatLog');
         const faqList = document.getElementById('supportFaqList');
 
         if (chatLog) {
             chatLog.innerHTML = '';
-            const messages = convertToArray(data.messages).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+            // Safely access messages property
+            const messages = convertToArray(data && data.messages ? data.messages : null).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
             if (!messages.length) {
                 chatLog.innerHTML = emptyState('Chat history will appear here.');
             } else {
@@ -417,6 +457,11 @@
     }
 
     function renderOrders(data = {}) {
+        // Ensure data is always an object, never null
+        if (!data || typeof data !== 'object') {
+            data = {};
+        }
+
         const list = document.getElementById('ordersList');
         if (!list) return;
         list.innerHTML = '';
@@ -443,6 +488,11 @@
     }
 
     function renderNotifications(data = {}) {
+        // Ensure data is always an object, never null
+        if (!data || typeof data !== 'object') {
+            data = {};
+        }
+
         const list = document.getElementById('notificationsList');
         if (!list) return;
         list.innerHTML = '';
@@ -470,6 +520,11 @@
     }
 
     function renderProfileSection(data = {}) {
+        // Ensure data is always an object, never null
+        if (!data || typeof data !== 'object') {
+            data = {};
+        }
+
         const businessDl = document.getElementById('profileBusinessDetails');
         const addressesUl = document.getElementById('profileAddresses');
         const preferencesDl = document.getElementById('profilePreferences');

@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | FXcgo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="checkout.css">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+</head>
+<body>
+    <div class="checkout-container">
+        <!-- Header -->
+        <header class="checkout-header">
+            <div class="header-content">
+                <a href="marketplace.html" class="back-link">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    Back to Marketplace
+                </a>
+                <div class="logo">
+                    <span class="logo-text">FXcgo Checkout</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Progress Steps -->
+        <div class="checkout-progress">
+            <div class="progress-step active" data-step="1">
+                <div class="step-number">1</div>
+                <div class="step-label">Order Details</div>
+            </div>
+            <div class="progress-line"></div>
+            <div class="progress-step" data-step="2">
+                <div class="step-number">2</div>
+                <div class="step-label">Payment</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="checkout-main">
+            <div class="checkout-wrapper">
+                <!-- Order Summary Sidebar -->
+                <aside class="order-summary">
+                    <h3>Order Summary</h3>
+                    <div id="orderItems" class="order-items">
+                        <!-- Cart items will be loaded here -->
+                    </div>
+                    <div class="order-totals">
+                        <div class="total-row">
+                            <span>Subtotal</span>
+                            <span id="subtotal">$0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Shipping</span>
+                            <span id="shipping">$0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Tax</span>
+                            <span id="tax">$0.00</span>
+                        </div>
+                        <div class="total-row total-final">
+                            <span>Total</span>
+                            <strong id="orderTotal">$0.00</strong>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Checkout Form -->
+                <div class="checkout-form-container">
+                    <!-- Step 1: Order Details -->
+                    <form id="orderDetailsForm" class="checkout-step active" data-step="1">
+                        <h2>Order Details</h2>
+                        <p class="step-description">Please provide your shipping information and required documents</p>
+
+                        <!-- Contact Information -->
+                        <div class="form-section">
+                            <h3>Contact Information</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="fullName">Full Name *</label>
+                                    <input type="text" id="fullName" name="fullName" required placeholder="Enter your full name">
+                                </div>
+                                <div class="form-group">
+                                    <label for="email">Email Address *</label>
+                                    <input type="email" id="email" name="email" required placeholder="your.email@example.com">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="phone">Phone Number *</label>
+                                    <input type="tel" id="phone" name="phone" required placeholder="+1 234 567 8900">
+                                </div>
+                                <div class="form-group">
+                                    <label for="alternatePhone">Alternate Phone (Optional)</label>
+                                    <input type="tel" id="alternatePhone" name="alternatePhone" placeholder="+1 234 567 8900">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Shipping Address -->
+                        <div class="form-section">
+                            <h3>Shipping Address</h3>
+                            <div class="form-group">
+                                <label for="addressLine1">Address Line 1 *</label>
+                                <input type="text" id="addressLine1" name="addressLine1" required placeholder="Street address, P.O. box">
+                            </div>
+                            <div class="form-group">
+                                <label for="addressLine2">Address Line 2 (Optional)</label>
+                                <input type="text" id="addressLine2" name="addressLine2" placeholder="Apartment, suite, unit, building, floor, etc.">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="city">City *</label>
+                                    <input type="text" id="city" name="city" required placeholder="City">
+                                </div>
+                                <div class="form-group">
+                                    <label for="state">State/Province *</label>
+                                    <input type="text" id="state" name="state" required placeholder="State or Province">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="postalCode">Postal/ZIP Code *</label>
+                                    <input type="text" id="postalCode" name="postalCode" required placeholder="12345">
+                                </div>
+                                <div class="form-group">
+                                    <label for="country">Country *</label>
+                                    <select id="country" name="country" required>
+                                        <option value="">Select Country</option>
+                                        <option value="IN">India</option>
+                                        <option value="US">United States</option>
+                                        <option value="GB">United Kingdom</option>
+                                        <option value="CA">Canada</option>
+                                        <option value="AU">Australia</option>
+                                        <option value="DE">Germany</option>
+                                        <option value="FR">France</option>
+                                        <option value="JP">Japan</option>
+                                        <option value="CN">China</option>
+                                        <option value="BR">Brazil</option>
+                                        <option value="MX">Mexico</option>
+                                        <option value="AE">United Arab Emirates</option>
+                                        <option value="SG">Singapore</option>
+                                        <option value="NL">Netherlands</option>
+                                        <option value="IT">Italy</option>
+                                        <option value="ES">Spain</option>
+                                        <option value="KR">South Korea</option>
+                                        <option value="SA">Saudi Arabia</option>
+                                        <option value="ZA">South Africa</option>
+                                        <option value="OTHER">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Document Uploads -->
+                        <div class="form-section">
+                            <h3>Required Documents</h3>
+                            <p class="section-note">Please upload the following documents for order processing</p>
+                            
+                            <div class="document-upload-group">
+                                <div class="document-upload-item">
+                                    <label for="idProof">Government ID Proof *</label>
+                                    <p class="upload-hint">Passport, Driver's License, or National ID (Max 10MB)</p>
+                                    <div class="file-upload-wrapper">
+                                        <input type="file" id="idProof" name="idProof" accept=".pdf,.jpg,.jpeg,.png" required>
+                                        <div class="file-upload-display" id="idProofDisplay">
+                                            <span>No file selected</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="document-upload-item">
+                                    <label for="businessLicense">Business License / Registration (Optional)</label>
+                                    <p class="upload-hint">For business orders (Max 10MB)</p>
+                                    <div class="file-upload-wrapper">
+                                        <input type="file" id="businessLicense" name="businessLicense" accept=".pdf,.jpg,.jpeg,.png">
+                                        <div class="file-upload-display" id="businessLicenseDisplay">
+                                            <span>No file selected</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="document-upload-item">
+                                    <label for="taxDocument">Tax ID / VAT Certificate (Optional)</label>
+                                    <p class="upload-hint">For tax purposes (Max 10MB)</p>
+                                    <div class="file-upload-wrapper">
+                                        <input type="file" id="taxDocument" name="taxDocument" accept=".pdf,.jpg,.jpeg,.png">
+                                        <div class="file-upload-display" id="taxDocumentDisplay">
+                                            <span>No file selected</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="document-upload-item">
+                                    <label for="importLicense">Import License / Permit (If Required)</label>
+                                    <p class="upload-hint">For international orders (Max 10MB)</p>
+                                    <div class="file-upload-wrapper">
+                                        <input type="file" id="importLicense" name="importLicense" accept=".pdf,.jpg,.jpeg,.png">
+                                        <div class="file-upload-display" id="importLicenseDisplay">
+                                            <span>No file selected</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Notes -->
+                        <div class="form-section">
+                            <h3>Additional Information</h3>
+                            <div class="form-group">
+                                <label for="specialInstructions">Special Instructions (Optional)</label>
+                                <textarea id="specialInstructions" name="specialInstructions" rows="4" placeholder="Any special delivery instructions or notes..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" onclick="window.location.href='marketplace.html'">Cancel</button>
+                            <button type="submit" class="btn-primary">Continue to Payment</button>
+                        </div>
+                    </form>
+
+                    <!-- Step 2: Payment -->
+                    <form id="paymentForm" class="checkout-step" data-step="2">
+                        <h2>Payment Method</h2>
+                        <p class="step-description">Select your preferred payment method and complete the transaction</p>
+
+                        <!-- Payment Method Selection -->
+                        <div class="form-section">
+                            <h3>Select Payment Method</h3>
+                            <div class="payment-methods">
+                                <label class="payment-method-card">
+                                    <input type="radio" name="paymentMethod" value="creditCard" checked>
+                                    <div class="payment-method-content">
+                                        <div class="payment-icon">💳</div>
+                                        <div class="payment-info">
+                                            <div class="payment-name">Credit Card</div>
+                                            <div class="payment-desc">Visa, Mastercard, Amex</div>
+                                        </div>
+                                    </div>
+                                </label>
+
+                                <label class="payment-method-card">
+                                    <input type="radio" name="paymentMethod" value="debitCard">
+                                    <div class="payment-method-content">
+                                        <div class="payment-icon">💳</div>
+                                        <div class="payment-info">
+                                            <div class="payment-name">Debit Card</div>
+                                            <div class="payment-desc">Visa, Mastercard Debit</div>
+                                        </div>
+                                    </div>
+                                </label>
+
+                                <label class="payment-method-card">
+                                    <input type="radio" name="paymentMethod" value="upi">
+                                    <div class="payment-method-content">
+                                        <div class="payment-icon">📱</div>
+                                        <div class="payment-info">
+                                            <div class="payment-name">UPI</div>
+                                            <div class="payment-desc">Google Pay, PhonePe, Paytm</div>
+                                        </div>
+                                    </div>
+                                </label>
+
+                                <label class="payment-method-card">
+                                    <input type="radio" name="paymentMethod" value="netBanking">
+                                    <div class="payment-method-content">
+                                        <div class="payment-icon">🏦</div>
+                                        <div class="payment-info">
+                                            <div class="payment-name">Net Banking</div>
+                                            <div class="payment-desc">Direct bank transfer</div>
+                                        </div>
+                                    </div>
+                                </label>
+
+                                <label class="payment-method-card">
+                                    <input type="radio" name="paymentMethod" value="wallet">
+                                    <div class="payment-method-content">
+                                        <div class="payment-icon">👛</div>
+                                        <div class="payment-info">
+                                            <div class="payment-name">Digital Wallet</div>
+                                            <div class="payment-desc">PayPal, Apple Pay, etc.</div>
+                                        </div>
+                                    </div>
+                                </label>
+
+                                <label class="payment-method-card">
+                                    <input type="radio" name="paymentMethod" value="bankTransfer">
+                                    <div class="payment-method-content">
+                                        <div class="payment-icon">🏛️</div>
+                                        <div class="payment-info">
+                                            <div class="payment-name">Bank Transfer</div>
+                                            <div class="payment-desc">Wire transfer, SWIFT</div>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Card Payment Form -->
+                        <div id="cardPaymentForm" class="payment-form-section">
+                            <h3>Card Details</h3>
+                            <div class="form-group">
+                                <label for="cardNumber">Card Number *</label>
+                                <input type="text" id="cardNumber" name="cardNumber" maxlength="19" placeholder="1234 5678 9012 3456" required>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="cardExpiry">Expiry Date *</label>
+                                    <input type="text" id="cardExpiry" name="cardExpiry" maxlength="5" placeholder="MM/YY" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="cardCVV">CVV *</label>
+                                    <input type="text" id="cardCVV" name="cardCVV" maxlength="4" placeholder="123" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="cardName">Cardholder Name *</label>
+                                <input type="text" id="cardName" name="cardName" placeholder="Name on card" required>
+                            </div>
+                        </div>
+
+                        <!-- UPI Payment Form -->
+                        <div id="upiPaymentForm" class="payment-form-section" style="display: none;">
+                            <h3>UPI Details</h3>
+                            <div class="form-group">
+                                <label for="upiId">UPI ID *</label>
+                                <input type="text" id="upiId" name="upiId" placeholder="yourname@upi" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="upiApp">Select UPI App</label>
+                                <select id="upiApp" name="upiApp">
+                                    <option value="googlepay">Google Pay</option>
+                                    <option value="phonepe">PhonePe</option>
+                                    <option value="paytm">Paytm</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Net Banking Form -->
+                        <div id="netBankingForm" class="payment-form-section" style="display: none;">
+                            <h3>Bank Details</h3>
+                            <div class="form-group">
+                                <label for="bankName">Select Bank *</label>
+                                <select id="bankName" name="bankName" required>
+                                    <option value="">Select your bank</option>
+                                    <option value="sbi">State Bank of India</option>
+                                    <option value="hdfc">HDFC Bank</option>
+                                    <option value="icici">ICICI Bank</option>
+                                    <option value="axis">Axis Bank</option>
+                                    <option value="kotak">Kotak Mahindra Bank</option>
+                                    <option value="pnb">Punjab National Bank</option>
+                                    <option value="bob">Bank of Baroda</option>
+                                    <option value="other">Other Bank</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="accountNumber">Account Number (Last 4 digits) *</label>
+                                <input type="text" id="accountNumber" name="accountNumber" maxlength="4" placeholder="XXXX" required>
+                            </div>
+                        </div>
+
+                        <!-- Wallet Form -->
+                        <div id="walletForm" class="payment-form-section" style="display: none;">
+                            <h3>Wallet Details</h3>
+                            <div class="form-group">
+                                <label for="walletType">Select Wallet *</label>
+                                <select id="walletType" name="walletType" required>
+                                    <option value="">Select wallet</option>
+                                    <option value="paypal">PayPal</option>
+                                    <option value="applepay">Apple Pay</option>
+                                    <option value="googlepay">Google Pay</option>
+                                    <option value="amazonpay">Amazon Pay</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="walletEmail">Wallet Email/ID *</label>
+                                <input type="email" id="walletEmail" name="walletEmail" placeholder="your.email@example.com" required>
+                            </div>
+                        </div>
+
+                        <!-- Bank Transfer Form -->
+                        <div id="bankTransferForm" class="payment-form-section" style="display: none;">
+                            <h3>Bank Transfer Details</h3>
+                            <div class="form-group">
+                                <label for="transferType">Transfer Type *</label>
+                                <select id="transferType" name="transferType" required>
+                                    <option value="">Select type</option>
+                                    <option value="wire">Wire Transfer</option>
+                                    <option value="swift">SWIFT Transfer</option>
+                                    <option value="ach">ACH Transfer</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="transferReference">Transaction Reference Number *</label>
+                                <input type="text" id="transferReference" name="transferReference" placeholder="Enter reference number" required>
+                            </div>
+                            <div class="info-box">
+                                <strong>Bank Details for Transfer:</strong>
+                                <p>Account Name: FXcgo Exports<br>
+                                Account Number: 1234567890<br>
+                                SWIFT Code: FXCGUS33<br>
+                                Bank Name: International Trade Bank</p>
+                            </div>
+                        </div>
+
+                        <!-- Billing Address (Same as Shipping) -->
+                        <div class="form-section">
+                            <h3>Billing Address</h3>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="sameAsShipping" checked>
+                                <span>Billing address is the same as shipping address</span>
+                            </label>
+                            <div id="billingAddressSection" style="display: none;">
+                                <!-- Billing address fields will be shown here if needed -->
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" onclick="goToStep(1)">Back</button>
+                            <button type="submit" class="btn-primary" id="submitPaymentBtn">
+                                <span class="btn-text">Complete Payment</span>
+                                <span class="btn-loader"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+
+        <!-- Success Modal -->
+        <div id="successModal" class="success-modal">
+            <div class="success-modal-content">
+                <div class="success-icon">✓</div>
+                <h2>Order Placed Successfully!</h2>
+                <p>Your order has been confirmed and payment has been processed.</p>
+                <p class="order-id">Order ID: <strong id="orderIdDisplay"></strong></p>
+                <div class="success-actions">
+                    <button class="btn-primary" onclick="window.location.href='marketplace.html'">Continue Shopping</button>
+                    <button class="btn-secondary" onclick="viewOrderDetails()">View Order Details</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div id="checkoutToast" class="toast"></div>
+    </div>
+
+    <script src="checkout.js"></script>
+</body>
+</html>
+
