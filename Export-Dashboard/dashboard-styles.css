@@ -610,7 +610,7 @@ input[type="file"] {
 
 /* Buttons */
 .btn-save {
-    width: 100%;
+    /* width: 100%; */
     padding: var(--spacing-md) var(--spacing-lg);
     background: var(--color-primary);
     color: white;
@@ -631,9 +631,9 @@ input[type="file"] {
 }
 
 .btn-logout {
-    width: 100%;
+    /* width: 100%; */
     padding: var(--spacing-md) var(--spacing-lg);
-    background: #ef4444;
+    background: #1820eb;
     color: white;
     border: none;
     border-radius: var(--radius-lg);
@@ -642,18 +642,18 @@ input[type="file"] {
     cursor: pointer;
     transition: all var(--transition-base);
     font-family: var(--font-family);
-    margin-top: var(--spacing-xl);
+    margin-top: 1rem;
 }
 
 .btn-logout:hover {
-    background: #dc2626;
+    background: #0a0fa8;
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
 }
 
 .logout-section {
-    margin-top: var(--spacing-2xl);
-    padding-top: var(--spacing-xl);
+    /* margin-top: var(--spacing-2xl); */
+    /* padding-top: var(--spacing-xl); */
     border-top: 2px solid var(--color-border);
 }
 

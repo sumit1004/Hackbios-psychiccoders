@@ -179,16 +179,7 @@
                     </li>
                 </ul>
             </nav>
-            <div class="sidebar-footer">
-                <button id="importerLogoutBtn" class="btn-ghost logout-btn">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                        <polyline points="16 17 21 12 16 7"></polyline>
-                        <line x1="21" y1="12" x2="9" y2="12"></line>
-                    </svg>
-                    Logout
-                </button>
-            </div>
+            
         </aside>
 
         <div class="dashboard-main">
@@ -431,7 +422,8 @@
                         <header class="forward-contract-hero">
                             <div class="forward-contract-hero-icon">💱</div>
                             <h2>Forward Contract Note Generator</h2>
-                            <p class="forward-contract-subheadline">Analyze FX trends, volatility, and risk tolerance to determine the optimal time to lock a forward contract.</p>
+                            <p class="forward-contract-subheadline">Analyze FX trends, volatility, and risk tolerance to
+                                determine the optimal time to lock a forward contract.</p>
                         </header>
 
                         <main class="forward-contract-main-content">
@@ -446,7 +438,8 @@
                                                 <span class="forward-contract-label-icon">💰</span>
                                                 Amount
                                             </label>
-                                            <input type="number" id="importerForwardContractAmount" name="amount" placeholder="Enter amount" required>
+                                            <input type="number" id="importerForwardContractAmount" name="amount"
+                                                placeholder="Enter amount" required>
                                         </div>
 
                                         <div class="forward-contract-form-group">
@@ -454,7 +447,8 @@
                                                 <span class="forward-contract-label-icon">📅</span>
                                                 Settlement Date
                                             </label>
-                                            <input type="date" id="importerForwardContractSettlementDate" name="settlementDate" required>
+                                            <input type="date" id="importerForwardContractSettlementDate"
+                                                name="settlementDate" required>
                                         </div>
                                     </div>
 
@@ -464,7 +458,8 @@
                                                 <span class="forward-contract-label-icon">⚡</span>
                                                 Risk Tolerance
                                             </label>
-                                            <select id="importerForwardContractRiskTolerance" name="riskTolerance" required>
+                                            <select id="importerForwardContractRiskTolerance" name="riskTolerance"
+                                                required>
                                                 <option value="">Select risk tolerance</option>
                                                 <option value="low">Low</option>
                                                 <option value="medium">Medium</option>
@@ -477,7 +472,8 @@
                                                 <span class="forward-contract-label-icon">🌍</span>
                                                 Currency Pair
                                             </label>
-                                            <select id="importerForwardContractCurrencyPair" name="currencyPair" required>
+                                            <select id="importerForwardContractCurrencyPair" name="currencyPair"
+                                                required>
                                                 <option value="">Select currency pair</option>
                                                 <option value="USD/EUR">USD/EUR</option>
                                                 <option value="USD/GBP">USD/GBP</option>
@@ -487,7 +483,8 @@
                                                 <option value="EUR/JPY">EUR/JPY</option>
                                                 <option value="GBP/JPY">GBP/JPY</option>
                                             </select>
-                                            <div id="importerForwardContractCurrencyPrice" class="forward-contract-currency-price"></div>
+                                            <div id="importerForwardContractCurrencyPrice"
+                                                class="forward-contract-currency-price"></div>
                                         </div>
                                     </div>
 
@@ -594,7 +591,11 @@
                                 <div id="supportChatLog" class="chat-log"></div>
                                 <form id="supportMessageForm" class="chat-form">
                                     <textarea name="message" rows="3" placeholder="Type your message"></textarea>
-                                    <button type="submit" class="btn-primary">Send</button>
+                                    <button type="submit" class="btn-primary" style="    width: 70px;
+                                    padding: 10px;
+                                    font-size: 1rem;
+                                    border: none;
+                                    border-radius: 5px;">Send</button>
                                 </form>
                             </div>
                             <div class="faq-column">
@@ -669,7 +670,8 @@
                                 <h2>Shopping Cart</h2>
                                 <p>Products you've added from the marketplace</p>
                             </div>
-                            <a href="../marketplace/marketplace.html" target="_blank" class="btn-secondary" style="text-decoration: none;">
+                            <a href="../marketplace/marketplace.html" target="_blank" class="btn-secondary"
+                                style="text-decoration: none;">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2">
                                     <path d="M3 7h18"></path>
@@ -1125,7 +1127,7 @@
                             </div>
                             <button type="submit" class="btn-save">Save Changes</button>
                         </form>
-                        <div class="logout-section">
+                        <div class="logout-section" style="">
                             <button type="button" class="btn-logout" onclick="handleImporterLogout()">Logout</button>
                         </div>
                     </div>

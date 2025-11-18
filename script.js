@@ -380,6 +380,20 @@ function getAuthInstance(userType = 'exporter') {
     const auth = authInstances[userType];
     if (!auth) {
         console.warn(`Firebase auth not configured for ${userType}.`);
+        // Try to initialize if not already done
+        if (userType === 'exporter' && !firebaseApps.exporter) {
+            firebaseApps.exporter = initializeFirebaseApp(exporterFirebaseConfig);
+            if (firebaseApps.exporter) {
+                authInstances.exporter = firebaseApps.exporter.auth();
+                return authInstances.exporter;
+            }
+        } else if (userType === 'importer' && !firebaseApps.importer) {
+            firebaseApps.importer = initializeFirebaseApp(importerFirebaseConfig, 'importerApp');
+            if (firebaseApps.importer) {
+                authInstances.importer = firebaseApps.importer.auth();
+                return authInstances.importer;
+            }
+        }
     }
     return auth;
 }
@@ -664,13 +678,41 @@ async function handleEmailLogin(event, userType = currentUserType) {
     showAuthMessage('', 'info');
     
     try {
+        // Validate inputs
+        if (!email || !email.trim()) {
+            showAuthMessage('Please enter your email address', 'error');
+            setButtonLoading(buttonId, false);
+            return;
+        }
+        
+        if (!password || !password.trim()) {
+            showAuthMessage('Please enter your password', 'error');
+            setButtonLoading(buttonId, false);
+            return;
+        }
+        
         // Check if input is email or username
-        let emailToUse = email;
-        if (!email.includes('@')) {
+        let emailToUse = email.trim();
+        if (!emailToUse.includes('@')) {
             // If it's a username, you might want to look it up in Firestore
             // For now, we'll treat it as an email or show an error
             showAuthMessage('Please use your email address to login', 'error');
-            setButtonLoading('emailLoginBtn', false);
+            setButtonLoading(buttonId, false);
+            return;
+        }
+        
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(emailToUse)) {
+            showAuthMessage('Please enter a valid email address', 'error');
+            setButtonLoading(buttonId, false);
+            return;
+        }
+        
+        // Validate password length
+        if (password.length < 6) {
+            showAuthMessage('Password must be at least 6 characters long', 'error');
+            setButtonLoading(buttonId, false);
             return;
         }
         
@@ -694,20 +736,34 @@ async function handleEmailLogin(event, userType = currentUserType) {
         
         switch (error.code) {
             case 'auth/user-not-found':
-                errorMessage = 'No account found with this email.';
+                errorMessage = 'No account found with this email. Please sign up first.';
                 break;
             case 'auth/wrong-password':
                 errorMessage = 'Incorrect password. Please try again.';
                 break;
             case 'auth/invalid-email':
-                errorMessage = 'Invalid email address.';
+                errorMessage = 'Invalid email address format.';
+                break;
+            case 'auth/invalid-credential':
+                errorMessage = 'Invalid email or password. Please check your credentials and try again.';
                 break;
             case 'auth/user-disabled':
-                errorMessage = 'This account has been disabled.';
+                errorMessage = 'This account has been disabled. Please contact support.';
                 break;
             case 'auth/too-many-requests':
-                errorMessage = 'Too many failed attempts. Please try again later.';
+                errorMessage = 'Too many failed login attempts. Please try again later or reset your password.';
                 break;
+            case 'auth/network-request-failed':
+                errorMessage = 'Network error. Please check your internet connection and try again.';
+                break;
+            case 'auth/internal-error':
+                errorMessage = 'An internal error occurred. Please try again later.';
+                break;
+            default:
+                // For unknown errors, show a generic message
+                if (error.message) {
+                    errorMessage = `Login failed: ${error.message}`;
+                }
         }
         
         showAuthMessage(errorMessage, 'error');
@@ -841,6 +897,34 @@ async function handleSignup(event, userType = currentUserType) {
     showAuthMessage('', 'info');
     
     try {
+        // Validate inputs
+        if (!email || !email.trim()) {
+            showAuthMessage('Please enter your email address', 'error');
+            setButtonLoading(buttonId, false);
+            return;
+        }
+        
+        if (!password || !password.trim()) {
+            showAuthMessage('Please enter a password', 'error');
+            setButtonLoading(buttonId, false);
+            return;
+        }
+        
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            showAuthMessage('Please enter a valid email address', 'error');
+            setButtonLoading(buttonId, false);
+            return;
+        }
+        
+        // Validate password length
+        if (password.length < 6) {
+            showAuthMessage('Password must be at least 6 characters long', 'error');
+            setButtonLoading(buttonId, false);
+            return;
+        }
+        
         // Create user account
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
@@ -894,14 +978,25 @@ async function handleSignup(event, userType = currentUserType) {
                 errorMessage = 'This email is already registered. Please login instead.';
                 break;
             case 'auth/invalid-email':
-                errorMessage = 'Invalid email address.';
+                errorMessage = 'Invalid email address format.';
                 break;
             case 'auth/weak-password':
-                errorMessage = 'Password is too weak. Please use a stronger password.';
+                errorMessage = 'Password is too weak. Please use a stronger password (at least 6 characters).';
                 break;
             case 'auth/operation-not-allowed':
-                errorMessage = 'Email/password accounts are not enabled.';
+                errorMessage = 'Email/password accounts are not enabled. Please contact support.';
                 break;
+            case 'auth/network-request-failed':
+                errorMessage = 'Network error. Please check your internet connection and try again.';
+                break;
+            case 'auth/internal-error':
+                errorMessage = 'An internal error occurred. Please try again later.';
+                break;
+            default:
+                // For unknown errors, show a generic message
+                if (error.message) {
+                    errorMessage = `Signup failed: ${error.message}`;
+                }
         }
         
         showAuthMessage(errorMessage, 'error');
