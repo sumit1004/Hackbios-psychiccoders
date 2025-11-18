@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FXcgo</title>
+    <link rel="shortcut icon" href="../assets/logo.ico" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -21,7 +22,7 @@
         <aside class="dashboard-sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="logo">
-                    <span class="logo-text">FXcgo</span>
+                    <a href="../index.html" style="text-decoration: none;"><img src="../assets/logo-1.png" alt="" width="40px"><span class="logo-text">FXcgo</span></a>
                 </div>
                 <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -539,8 +540,142 @@
                                 <div id="paymentHistoryList" class="history-list"></div>
                             </div>
                         </div>
+                        
+                        <div class="forward-contracts-payment-section" style="margin-top: 40px;">
+                            <div class="forward-contracts-header">
+                                <h3>📄 Forward Contract Notes</h3>
+                                <p>View and download your generated forward contract PDFs</p>
+                            </div>
+                            <div id="importerForwardContractsList" class="forward-contracts-list">
+                                <div class="forward-contracts-loading" style="text-align: center; padding: 40px;">
+                                    <div class="spinner" style="border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+                                    <p>Loading forward contracts...</p>
+                                </div>
+                            </div>
+                            <div id="importerForwardContractsEmpty" class="forward-contracts-empty" style="display: none; text-align: center; padding: 60px 20px;">
+                                <div style="font-size: 48px; margin-bottom: 20px;">📋</div>
+                                <h3 style="color: #6b7280; margin-bottom: 10px;">No Forward Contracts Yet</h3>
+                                <p style="color: #9ca3af; margin-bottom: 20px;">Generate your first forward contract note from the Forward Contracts section.</p>
+                                <button onclick="activateSection('contracts')" class="btn-primary" style="padding: 12px 24px; border-radius: 8px; border: none; background: #3b82f6; color: white; cursor: pointer; font-size: 14px; font-weight: 500;">
+                                    Go to Forward Contracts
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </section>
+                
+                <style>
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                    .forward-contracts-payment-section {
+                        margin-top: 30px;
+                    }
+                    .forward-contracts-header {
+                        margin-bottom: 24px;
+                    }
+                    .forward-contracts-header h3 {
+                        font-size: 20px;
+                        font-weight: 600;
+                        color: #111827;
+                        margin-bottom: 8px;
+                    }
+                    .forward-contracts-header p {
+                        color: #6b7280;
+                        font-size: 14px;
+                    }
+                    .forward-contracts-list {
+                        display: grid;
+                        gap: 16px;
+                    }
+                    .forward-contract-card {
+                        background: white;
+                        border: 1px solid #e5e7eb;
+                        border-radius: 12px;
+                        padding: 20px;
+                        transition: all 0.2s;
+                    }
+                    .forward-contract-card:hover {
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                        border-color: #3b82f6;
+                    }
+                    .forward-contract-card-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: flex-start;
+                        margin-bottom: 16px;
+                    }
+                    .forward-contract-card-title {
+                        font-size: 18px;
+                        font-weight: 600;
+                        color: #111827;
+                        margin-bottom: 4px;
+                    }
+                    .forward-contract-card-date {
+                        font-size: 12px;
+                        color: #6b7280;
+                    }
+                    .forward-contract-card-badge {
+                        padding: 4px 12px;
+                        border-radius: 12px;
+                        font-size: 12px;
+                        font-weight: 500;
+                        background: #d1fae5;
+                        color: #065f46;
+                    }
+                    .forward-contract-card-details {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                        gap: 12px;
+                        margin-bottom: 16px;
+                    }
+                    .forward-contract-detail-item {
+                        display: flex;
+                        flex-direction: column;
+                    }
+                    .forward-contract-detail-label {
+                        font-size: 12px;
+                        color: #6b7280;
+                        margin-bottom: 4px;
+                    }
+                    .forward-contract-detail-value {
+                        font-size: 14px;
+                        font-weight: 500;
+                        color: #111827;
+                    }
+                    .forward-contract-card-actions {
+                        display: flex;
+                        gap: 12px;
+                        margin-top: 16px;
+                    }
+                    .forward-contract-action-btn {
+                        padding: 10px 20px;
+                        border-radius: 8px;
+                        border: none;
+                        font-size: 14px;
+                        font-weight: 500;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                    }
+                    .forward-contract-action-btn-primary {
+                        background: #3b82f6;
+                        color: white;
+                    }
+                    .forward-contract-action-btn-primary:hover {
+                        background: #2563eb;
+                    }
+                    .forward-contract-action-btn-secondary {
+                        background: #f3f4f6;
+                        color: #374151;
+                    }
+                    .forward-contract-action-btn-secondary:hover {
+                        background: #e5e7eb;
+                    }
+                </style>
 
                 <section class="content-section" id="disputesSection" data-section="disputes" role="tabpanel"
                     aria-labelledby="tab-disputes" tabindex="0" hidden>

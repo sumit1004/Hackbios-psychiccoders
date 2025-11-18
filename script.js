@@ -598,13 +598,21 @@ function showAuthMessage(message, type = 'info') {
     const messageEl = document.getElementById('authMessage');
     if (!messageEl) return;
     
-    messageEl.textContent = message;
+    // Check if message contains HTML tags
+    const containsHTML = /<[a-z][\s\S]*>/i.test(message);
+    if (containsHTML) {
+        messageEl.innerHTML = message;
+    } else {
+        messageEl.textContent = message;
+    }
+    
     messageEl.className = `auth-message ${type} show`;
     
-    // Auto-hide after 5 seconds
+    // Auto-hide after 8 seconds for error messages with links
+    const hideDelay = (type === 'error' && containsHTML) ? 8000 : 5000;
     setTimeout(() => {
         messageEl.classList.remove('show');
-    }, 5000);
+    }, hideDelay);
 }
 
 /**
@@ -665,7 +673,15 @@ async function handleEmailLogin(event, userType = currentUserType) {
 
     const auth = getAuthInstance(userType);
     if (!auth) {
+        console.error(`Firebase auth not available for ${userType}`);
         showAuthMessage(`Firebase is not configured for ${userType}. Please add your Firebase credentials.`, 'error');
+        return;
+    }
+    
+    // Verify Firebase is properly initialized
+    if (!firebase || !firebase.apps || firebase.apps.length === 0) {
+        console.error('Firebase not initialized');
+        showAuthMessage('Firebase is not initialized. Please refresh the page and try again.', 'error');
         return;
     }
     
@@ -732,32 +748,47 @@ async function handleEmailLogin(event, userType = currentUserType) {
         
     } catch (error) {
         console.error('Login error:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        
         let errorMessage = 'Login failed. Please try again.';
+        let showSignupLink = false;
+        let showForgotPasswordLink = false;
         
         switch (error.code) {
             case 'auth/user-not-found':
-                errorMessage = 'No account found with this email. Please sign up first.';
+                errorMessage = 'No account found with this email address.';
+                showSignupLink = true;
                 break;
             case 'auth/wrong-password':
-                errorMessage = 'Incorrect password. Please try again.';
+                errorMessage = 'Incorrect password. Please check your password and try again.';
+                showForgotPasswordLink = true;
                 break;
             case 'auth/invalid-email':
-                errorMessage = 'Invalid email address format.';
+                errorMessage = 'Invalid email address format. Please enter a valid email address.';
                 break;
             case 'auth/invalid-credential':
-                errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+                // This error can mean either wrong password or user doesn't exist
+                // We'll show a helpful message with both options
+                errorMessage = 'Invalid email or password. Please check your credentials.';
+                showSignupLink = true;
+                showForgotPasswordLink = true;
                 break;
             case 'auth/user-disabled':
-                errorMessage = 'This account has been disabled. Please contact support.';
+                errorMessage = 'This account has been disabled. Please contact support for assistance.';
                 break;
             case 'auth/too-many-requests':
-                errorMessage = 'Too many failed login attempts. Please try again later or reset your password.';
+                errorMessage = 'Too many failed login attempts. Please wait a few minutes before trying again, or reset your password.';
+                showForgotPasswordLink = true;
                 break;
             case 'auth/network-request-failed':
                 errorMessage = 'Network error. Please check your internet connection and try again.';
                 break;
             case 'auth/internal-error':
                 errorMessage = 'An internal error occurred. Please try again later.';
+                break;
+            case 'auth/operation-not-allowed':
+                errorMessage = 'Email/password authentication is not enabled. Please contact support.';
                 break;
             default:
                 // For unknown errors, show a generic message
@@ -766,7 +797,20 @@ async function handleEmailLogin(event, userType = currentUserType) {
                 }
         }
         
-        showAuthMessage(errorMessage, 'error');
+        // Show error message with helpful links
+        let messageHTML = errorMessage;
+        if (showSignupLink || showForgotPasswordLink) {
+            messageHTML += '<div style="margin-top: 10px; font-size: 14px;">';
+            if (showSignupLink) {
+                messageHTML += `<a href="#" onclick="event.preventDefault(); switchAuthTab('signup'); return false;" style="color: #3b82f6; text-decoration: underline; margin-right: 15px;">Don't have an account? Sign up</a>`;
+            }
+            if (showForgotPasswordLink) {
+                messageHTML += `<a href="#" onclick="event.preventDefault(); handleForgotPassword(event, '${userType}'); return false;" style="color: #3b82f6; text-decoration: underline;">Forgot password?</a>`;
+            }
+            messageHTML += '</div>';
+        }
+        
+        showAuthMessage(messageHTML, 'error');
     } finally {
         setButtonLoading(buttonId, false);
     }

@@ -982,12 +982,42 @@ async function saveSettingsInfo(event) {
     }
 }
 
+// Store Firestore listeners for cleanup
+let ekycStatusListener = null;
+
+/**
+ * Clean up all Firebase listeners
+ */
+function cleanupFirebaseListeners() {
+    try {
+        // Clean up Firestore listeners
+        if (ekycStatusListener) {
+            ekycStatusListener();
+            ekycStatusListener = null;
+        }
+        
+        if (videoCallListener) {
+            videoCallListener();
+            videoCallListener = null;
+        }
+        
+        detachSupportChatListeners();
+        
+        // Clean up any Realtime Database listeners if needed
+        // (Currently not using Realtime Database listeners in export dashboard)
+    } catch (error) {
+        console.warn('Error cleaning up Firebase listeners:', error);
+    }
+}
+
 /**
  * Handle logout
  */
 async function handleLogout() {
     if (confirm('Are you sure you want to logout?')) {
         try {
+            // Clean up all listeners before signing out
+            cleanupFirebaseListeners();
             await auth?.signOut();
             window.location.href = '../index.html';
         } catch (error) {
@@ -1160,10 +1190,16 @@ function listenForEKYCStatusChanges() {
         return;
     }
 
+    // Clean up existing listener if any
+    if (ekycStatusListener) {
+        ekycStatusListener();
+        ekycStatusListener = null;
+    }
+
     console.log('Setting up real-time eKYC listener for user:', user.uid);
     
     try {
-        firestore.collection('ekyc').doc(user.uid).onSnapshot(
+        ekycStatusListener = firestore.collection('ekyc').doc(user.uid).onSnapshot(
             (doc) => {
                 if (doc.exists) {
                     ekycData = doc.data();
@@ -4976,6 +5012,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 initializeSupportModule();
                 listenForSupportMessages();
             }
+            
+            if (tabName === 'payments') {
+                loadForwardContractsInPayments();
+            }
         };
         
         const initialTab = window.location.hash.substring(1);
@@ -5537,112 +5577,50 @@ document.addEventListener('DOMContentLoaded', function() {
         const resultHTML = `
             <div class="forward-contract-result-block">
                 <h2>Forward Contract Analysis</h2>
+
                 <div class="forward-contract-result-content">
-                    <p>Based on past volatility and trend analysis for <span class="highlight">${data.currencyPair}</span>, the ideal lock-in window is <span class="highlight">${data.idealWindow}</span>.</p>
+                    <p>Recommended lock-in window: <strong>${data.idealWindow}</strong>.</p>
                     <p>${data.recommendation}</p>
                 </div>
-                
+
                 <div class="forward-contract-lockin-dates-section">
-                    <div class="forward-contract-date-card preferred-date">
-                        <div class="forward-contract-date-icon">✅</div>
-                        <div class="forward-contract-date-content">
-                            <div class="forward-contract-date-label">Best Preferred Lock-In Date</div>
-                            <div class="forward-contract-date-value">${data.preferredDateFormatted}</div>
-                            <div class="forward-contract-date-price">
-                                <span class="forward-contract-price-label">Estimated Rate:</span>
-                                <span class="forward-contract-price-value">${data.preferredDateRate ? data.preferredDateRate.toFixed(4) : 'N/A'}</span>
-                            </div>
-                            ${data.preferredFinalAmount ? `
-                            <div class="forward-contract-final-amount-box">
-                                <div class="forward-contract-final-amount-label">Final Amount (with Risk Premium)</div>
-                                <div class="forward-contract-final-amount-value">${formatAmount(data.preferredFinalAmount.finalAmount)}</div>
-                                <div class="forward-contract-final-amount-breakdown">
-                                    <span>Base: ${formatAmount(data.preferredFinalAmount.baseAmount * data.preferredFinalAmount.exchangeRate)}</span>
-                                    <span>+ Premium: ${formatAmount(data.preferredFinalAmount.riskPremium)}</span>
-                                </div>
-                            </div>
-                            ` : ''}
-                            <div class="forward-contract-date-reason">Optimal timing based on historical trends and volatility patterns</div>
-                        </div>
+                    <div class="forward-contract-date-card">
+                        <div class="forward-contract-date-label">Preferred Execution Date</div>
+                        <div class="forward-contract-date-value">${data.preferredDateFormatted}</div>
+                        <div class="forward-contract-date-info">Estimated Rate: ${data.preferredDateRate ? data.preferredDateRate.toFixed(4) : 'N/A'}</div>
+                        ${data.preferredFinalAmount ? `<div class="forward-contract-date-info">Final Amount: ${formatAmount(data.preferredFinalAmount.finalAmount)}</div>` : ''}
                     </div>
-                    
-                    <div class="forward-contract-date-card least-preferred-date">
-                        <div class="forward-contract-date-icon">⚠️</div>
-                        <div class="forward-contract-date-content">
-                            <div class="forward-contract-date-label">Least Preferred Lock-In Date</div>
-                            <div class="forward-contract-date-value">${data.leastPreferredDateFormatted}</div>
-                            <div class="forward-contract-date-price">
-                                <span class="forward-contract-price-label">Estimated Rate:</span>
-                                <span class="forward-contract-price-value">${data.leastPreferredDateRate ? data.leastPreferredDateRate.toFixed(4) : 'N/A'}</span>
-                            </div>
-                            ${data.leastPreferredFinalAmount ? `
-                            <div class="forward-contract-final-amount-box">
-                                <div class="forward-contract-final-amount-label">Final Amount (with Risk Premium)</div>
-                                <div class="forward-contract-final-amount-value">${formatAmount(data.leastPreferredFinalAmount.finalAmount)}</div>
-                                <div class="forward-contract-final-amount-breakdown">
-                                    <span>Base: ${formatAmount(data.leastPreferredFinalAmount.baseAmount * data.leastPreferredFinalAmount.exchangeRate)}</span>
-                                    <span>+ Premium: ${formatAmount(data.leastPreferredFinalAmount.riskPremium)}</span>
-                                </div>
-                            </div>
-                            ` : ''}
-                            <div class="forward-contract-date-reason">Avoid this date - too close to settlement with higher risk exposure</div>
-                        </div>
+
+                    <div class="forward-contract-date-card">
+                        <div class="forward-contract-date-label">Least Preferred Date</div>
+                        <div class="forward-contract-date-value">${data.leastPreferredDateFormatted}</div>
+                        <div class="forward-contract-date-info">Estimated Rate: ${data.leastPreferredDateRate ? data.leastPreferredDateRate.toFixed(4) : 'N/A'}</div>
+                        ${data.leastPreferredFinalAmount ? `<div class="forward-contract-date-info">Final Amount: ${formatAmount(data.leastPreferredFinalAmount.finalAmount)}</div>` : ''}
                     </div>
                 </div>
-                
+
                 <div class="forward-contract-result-details">
-                    <div class="detail-row">
-                        <span class="detail-label">Amount:</span>
-                        <span class="detail-value">${formatAmount(data.amount)}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Settlement Date:</span>
-                        <span class="detail-value">${data.settlementDate}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Currency Pair:</span>
-                        <span class="detail-value">${data.currencyPair}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Current Exchange Rate:</span>
-                        <span class="detail-value">${data.currentRate ? data.currentRate.toFixed(4) : 'N/A'}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Risk Tolerance:</span>
-                        <span class="detail-value">${data.riskTolerance.charAt(0).toUpperCase() + data.riskTolerance.slice(1)}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">30-Day Volatility:</span>
-                        <span class="detail-value">${data.volatility}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Recommended Lock-In Window:</span>
-                        <span class="detail-value">${data.idealWindow}</span>
-                    </div>
-                    ${data.riskPremium ? `
-                    <div class="detail-row">
-                        <span class="detail-label">Risk Premium Rate:</span>
-                        <span class="detail-value">${(data.riskPremium.rate * 100).toFixed(2)}%</span>
-                    </div>
-                    ` : ''}
+                    <p><strong>Amount:</strong> ${formatAmount(data.amount)}</p>
+                    <p><strong>Settlement:</strong> ${data.settlementDate}</p>
+                    <p><strong>Pair:</strong> ${data.currencyPair}</p>
+                    <p><strong>Current Rate:</strong> ${data.currentRate ? data.currentRate.toFixed(4) : 'N/A'}</p>
+                    <p><strong>Volatility:</strong> ${data.volatility}</p>
                 </div>
             </div>
         `;
 
         resultsSection.innerHTML = resultHTML;
-        
-        // Add download PDF button
+
         const downloadBtn = document.createElement('button');
         downloadBtn.className = 'forward-contract-download-pdf-btn';
-        downloadBtn.innerHTML = '<span>📄</span> <span>Download Contract Note PDF</span>';
+        downloadBtn.textContent = 'Download Contract Note PDF';
         downloadBtn.onclick = () => generatePDF(data);
         resultsSection.querySelector('.forward-contract-result-block').appendChild(downloadBtn);
         
-        // Smooth scroll to results
         resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    function generatePDF(data) {
+    async function generatePDF(data) {
         if (typeof window.jspdf === 'undefined') {
             alert('PDF library not loaded. Please refresh the page.');
             return;
@@ -5650,248 +5628,171 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        
-        let yPosition = 20;
+
         const pageWidth = doc.internal.pageSize.getWidth();
         const margin = 20;
-        const contentWidth = pageWidth - (margin * 2);
-        
-        // Header with star and title
-        doc.setFontSize(20);
-        doc.setFont(undefined, 'bold');
-        doc.text('⭐ FORWARD CONTRACT NOTE', pageWidth / 2, yPosition, { align: 'center' });
-        yPosition += 10;
-        
-        doc.setFontSize(10);
-        doc.setFont(undefined, 'normal');
-        doc.text('Generated by FXCgo', pageWidth / 2, yPosition, { align: 'center' });
-        yPosition += 15;
-        
-        // Line separator
-        doc.setLineWidth(0.5);
-        doc.line(margin, yPosition, pageWidth - margin, yPosition);
-        yPosition += 10;
-        
-        // Contract Details Section
-        doc.setFontSize(14);
-        doc.setFont(undefined, 'bold');
-        doc.text('CONTRACT DETAILS', margin, yPosition);
-        yPosition += 8;
-        
-        doc.setFontSize(10);
-        doc.setFont(undefined, 'normal');
-        
-        const contractDetails = [
-            ['Amount:', formatAmount(data.amount)],
-            ['Settlement Date:', data.settlementDate],
-            ['Currency Pair:', data.currencyPair],
-            ['Current Exchange Rate:', data.currentRate ? data.currentRate.toFixed(4) : 'N/A'],
-            ['Risk Tolerance:', data.riskTolerance.charAt(0).toUpperCase() + data.riskTolerance.slice(1)],
-            ['30-Day Volatility:', data.volatility],
-            ['Recommended Lock-In Window:', data.idealWindow],
-            ['Risk Premium Rate:', data.riskPremium ? (data.riskPremium.rate * 100).toFixed(2) + '%' : 'N/A']
-        ];
-        
-        contractDetails.forEach(([label, value]) => {
-            doc.setFont(undefined, 'bold');
-            doc.text(label, margin, yPosition);
-            doc.setFont(undefined, 'normal');
-            doc.text(value, margin + 60, yPosition);
-            yPosition += 7;
-        });
-        
-        yPosition += 5;
-        
-        // Preferred Date Section
-        if (data.preferredFinalAmount) {
-            doc.setFontSize(12);
-            doc.setFont(undefined, 'bold');
-            doc.setTextColor(5, 120, 87); // Green color
-            doc.text('✅ BEST PREFERRED LOCK-IN DATE', margin, yPosition);
-            yPosition += 8;
-            
-            doc.setFontSize(10);
-            doc.setFont(undefined, 'normal');
-            doc.setTextColor(0, 0, 0);
-            
-            doc.setFont(undefined, 'bold');
-            doc.text('Date:', margin, yPosition);
-            doc.setFont(undefined, 'normal');
-            doc.text(data.preferredDateFormatted, margin + 20, yPosition);
-            yPosition += 7;
-            
-            doc.setFont(undefined, 'bold');
-            doc.text('Estimated Rate:', margin, yPosition);
-            doc.setFont(undefined, 'normal');
-            doc.text(data.preferredDateRate ? data.preferredDateRate.toFixed(4) : 'N/A', margin + 40, yPosition);
-            yPosition += 7;
-            
-            doc.setFont(undefined, 'bold');
-            doc.text('Final Amount (with Risk Premium):', margin, yPosition);
-            doc.setFont(undefined, 'bold');
-            doc.setTextColor(5, 120, 87);
-            doc.text(formatAmount(data.preferredFinalAmount.finalAmount), margin + 70, yPosition);
-            doc.setTextColor(0, 0, 0);
-            yPosition += 7;
-            
-            doc.setFont(undefined, 'normal');
-            doc.setFontSize(9);
-            doc.text('Base: ' + formatAmount(data.preferredFinalAmount.baseAmount * data.preferredFinalAmount.exchangeRate) + 
-                    ' + Premium: ' + formatAmount(data.preferredFinalAmount.riskPremium), margin + 5, yPosition);
-            yPosition += 10;
-        }
-        
-        // Least Preferred Date Section
-        if (data.leastPreferredFinalAmount) {
-            doc.setFontSize(12);
-            doc.setFont(undefined, 'bold');
-            doc.setTextColor(185, 28, 28); // Red color
-            doc.text('⚠️ LEAST PREFERRED LOCK-IN DATE', margin, yPosition);
-            yPosition += 8;
-            
-            doc.setFontSize(10);
-            doc.setFont(undefined, 'normal');
-            doc.setTextColor(0, 0, 0);
-            
-            doc.setFont(undefined, 'bold');
-            doc.text('Date:', margin, yPosition);
-            doc.setFont(undefined, 'normal');
-            doc.text(data.leastPreferredDateFormatted, margin + 20, yPosition);
-            yPosition += 7;
-            
-            doc.setFont(undefined, 'bold');
-            doc.text('Estimated Rate:', margin, yPosition);
-            doc.setFont(undefined, 'normal');
-            doc.text(data.leastPreferredDateRate ? data.leastPreferredDateRate.toFixed(4) : 'N/A', margin + 40, yPosition);
-            yPosition += 7;
-            
-            doc.setFont(undefined, 'bold');
-            doc.text('Final Amount (with Risk Premium):', margin, yPosition);
-            doc.setFont(undefined, 'bold');
-            doc.setTextColor(185, 28, 28);
-            doc.text(formatAmount(data.leastPreferredFinalAmount.finalAmount), margin + 70, yPosition);
-            doc.setTextColor(0, 0, 0);
-            yPosition += 7;
-            
-            doc.setFont(undefined, 'normal');
-            doc.setFontSize(9);
-            doc.text('Base: ' + formatAmount(data.leastPreferredFinalAmount.baseAmount * data.leastPreferredFinalAmount.exchangeRate) + 
-                    ' + Premium: ' + formatAmount(data.leastPreferredFinalAmount.riskPremium), margin + 5, yPosition);
-            yPosition += 10;
-        }
-        
-        // Check if we need a new page
-        if (yPosition > 250) {
-            doc.addPage();
-            yPosition = 20;
-        }
-        
-        // Recommendation Section
-        doc.setFontSize(12);
-        doc.setFont(undefined, 'bold');
-        doc.text('RECOMMENDATION', margin, yPosition);
-        yPosition += 8;
-        
-        doc.setFontSize(10);
-        doc.setFont(undefined, 'normal');
-        const recommendationText = doc.splitTextToSize(
-            `Based on past volatility and trend analysis for ${data.currencyPair}, the ideal lock-in window is ${data.idealWindow}. ${data.recommendation}`,
-            contentWidth
-        );
-        doc.text(recommendationText, margin, yPosition);
-        yPosition += recommendationText.length * 5 + 10;
-        
-        // Check if we need a new page for terms
-        if (yPosition > 200) {
-            doc.addPage();
-            yPosition = 20;
-        }
-        
-        // Terms and Conditions Section
-        doc.setFontSize(12);
-        doc.setFont(undefined, 'bold');
-        doc.text('TERMS AND CONDITIONS', margin, yPosition);
-        yPosition += 8;
-        
-        doc.setFontSize(9);
-        doc.setFont(undefined, 'normal');
-        
-        const terms = [
-            '1. This forward contract note is generated based on historical data analysis and market volatility patterns.',
-            '2. The estimated rates and dates are recommendations only and do not constitute financial advice.',
-            '3. All exchange rates are subject to market fluctuations and may vary at the time of actual contract execution.',
-            '4. Risk premium calculations are based on standard industry practices and may be adjusted based on market conditions.',
-            '5. The exporter is advised to consult with a qualified financial advisor before making any hedging decisions.',
-            '6. FXCgo is not liable for any losses incurred based on the recommendations provided in this contract note.',
-            '7. This contract note is valid for informational purposes only and does not constitute a binding agreement.',
-            '8. Government regulations regarding foreign exchange transactions must be complied with at all times.',
-            '9. All transactions are subject to applicable local and international laws and regulations.',
-            '10. The exporter is responsible for ensuring compliance with all regulatory requirements.',
-            '11. Forward contracts are subject to counterparty risk and market risk.',
-            '12. Early termination of forward contracts may incur penalties as per the terms of the financial institution.',
-            '13. This document is generated electronically and is valid without physical signature.',
-            '14. Any disputes arising from this contract note shall be subject to the jurisdiction of the relevant regulatory authority.'
-        ];
-        
-        terms.forEach((term, index) => {
-            if (yPosition > 270) {
-                doc.addPage();
-                yPosition = 20;
-            }
-            const termText = doc.splitTextToSize(term, contentWidth);
-            doc.text(termText, margin, yPosition);
-            yPosition += termText.length * 4 + 3;
-        });
-        
-        yPosition += 10;
-        
-        // Signature Section
-        if (yPosition > 250) {
-            doc.addPage();
-            yPosition = 20;
-        }
-        
-        doc.setFontSize(12);
-        doc.setFont(undefined, 'bold');
-        doc.text('AUTHORIZED SIGNATURE', margin, yPosition);
-        yPosition += 15;
-        
-        // Star symbol and FXCgo signature
+        let y = 20;
+
+        doc.setFont("Helvetica", "bold");
         doc.setFontSize(16);
-        doc.text('⭐', margin + 10, yPosition);
-        doc.setFontSize(14);
-        doc.setFont(undefined, 'bold');
-        doc.text('FXCgo', margin + 25, yPosition);
-        yPosition += 10;
-        
+        doc.text("FORWARD CONTRACT NOTE", pageWidth / 2, y, { align: "center" });
+        y += 10;
+
+        doc.setLineWidth(0.2);
+        doc.line(margin, y, pageWidth - margin, y);
+        y += 10;
+
+        doc.setFontSize(12);
+        doc.text("Contract Details", margin, y); 
+        y += 8;
+
         doc.setFontSize(10);
-        doc.setFont(undefined, 'normal');
-        doc.text('Authorized Financial Services Provider', margin, yPosition);
-        yPosition += 7;
-        
-        const today = new Date();
-        const dateStr = today.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
+
+        function addRow(label, value) {
+            doc.setFont("Helvetica", "bold");
+            doc.text(label + ":", margin, y);
+            doc.setFont("Helvetica", "normal");
+            doc.text(String(value), margin + 60, y);
+            y += 6;
+        }
+
+        function capitalize(x) {
+            return x.charAt(0).toUpperCase() + x.slice(1);
+        }
+
+        addRow("Currency Pair", data.currencyPair);
+        addRow("Contract Amount", formatAmount(data.amount));
+        addRow("Settlement Date", data.settlementDate);
+        addRow("Current Market Rate", data.currentRate?.toFixed(4) || "N/A");
+        addRow("Risk Tolerance", capitalize(data.riskTolerance));
+        addRow("Volatility (30-day)", data.volatility);
+
+        y += 5;
+
+        doc.setFont("Helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("Pricing Summary", margin, y);
+        y += 8;
+        doc.setFontSize(10);
+
+        if (data.preferredFinalAmount) {
+            addRow("Preferred Execution Date", data.preferredDateFormatted);
+            addRow("Estimated Rate", data.preferredDateRate.toFixed(4));
+            addRow("Final Amount", formatAmount(data.preferredFinalAmount.finalAmount));
+            y += 4;
+        }
+
+        if (data.leastPreferredFinalAmount) {
+            addRow("Least Preferred Date", data.leastPreferredDateFormatted);
+            addRow("Estimated Rate", data.leastPreferredDateRate.toFixed(4));
+            addRow("Final Amount", formatAmount(data.leastPreferredFinalAmount.finalAmount));
+            y += 4;
+        }
+
+        y += 5;
+
+        doc.setFont("Helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("Terms & Disclaimers", margin, y);
+        y += 8;
+
+        doc.setFontSize(9);
+
+        const terms = [
+            "1. All exchange rates stated herein are indicative and subject to market movements.",
+            "2. This document does not constitute financial or legal advice.",
+            "3. The client must verify contract details prior to execution.",
+            "4. The issuer is not liable for market-driven changes post issuance.",
+            "5. This document is system-generated and valid without signature."
+        ];
+
+        terms.forEach(t => {
+            const lines = doc.splitTextToSize(t, pageWidth - margin * 2);
+            doc.text(lines, margin, y);
+            y += lines.length * 5;
         });
-        doc.text('Date: ' + dateStr, margin, yPosition);
-        yPosition += 7;
+
+        y += 15;
+
+        doc.setFont("Helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("Authorized Signatory", margin, y);
+        y += 20;
+
+        doc.setFont("Helvetica", "normal");
+        doc.text("______________________________", margin, y); 
+        y += 6;
+        doc.text("Treasury Operations", margin, y); 
+        y += 6;
+        doc.text("Issued: " + new Date().toLocaleDateString("en-US"), margin, y);
+
+        const filename = `Forward_Contract_${data.currencyPair.replace("/", "_")}_${new Date().getTime()}.pdf`;
         
-        doc.text('This document is electronically generated and signed by FXCgo.', margin, yPosition);
-        yPosition += 10;
+        // Convert PDF to Base64
+        const pdfBase64 = doc.output('datauristring');
+        const pdfBase64Data = pdfBase64.split(',')[1];
         
-        // Footer
-        doc.setFontSize(8);
-        doc.setTextColor(128, 128, 128);
-        doc.text('This is a system-generated document. For inquiries, contact FXCgo support.', 
-                pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
-        
-        // Generate filename
-        const filename = `Forward_Contract_Note_${data.currencyPair.replace('/', '_')}_${today.getTime()}.pdf`;
-        
-        // Save PDF
+        // Save PDF locally
         doc.save(filename);
+        
+        // Save to Firebase Realtime Database
+        if (auth && database && auth.currentUser) {
+            const user = auth.currentUser;
+            const contractId = `contract_${new Date().getTime()}_${Math.random().toString(36).slice(2, 9)}`;
+            
+            const contractData = {
+                id: contractId,
+                amount: data.amount,
+                settlementDate: data.settlementDate,
+                currencyPair: data.currencyPair,
+                currentRate: data.currentRate,
+                riskTolerance: data.riskTolerance,
+                volatility: data.volatility,
+                idealWindow: data.idealWindow,
+                recommendation: data.recommendation,
+                preferredDate: data.preferredDateFormatted,
+                preferredDateRate: data.preferredDateRate,
+                preferredFinalAmount: data.preferredFinalAmount ? data.preferredFinalAmount.finalAmount : null,
+                leastPreferredDate: data.leastPreferredDateFormatted,
+                leastPreferredDateRate: data.leastPreferredDateRate,
+                leastPreferredFinalAmount: data.leastPreferredFinalAmount ? data.leastPreferredFinalAmount.finalAmount : null,
+                riskPremium: data.riskPremium ? {
+                    rate: data.riskPremium.rate,
+                    amount: data.riskPremium.amount
+                } : null,
+                pdfBase64: pdfBase64Data,
+                pdfFileName: filename,
+                createdAt: new Date().toISOString(),
+                status: 'active'
+            };
+            
+            try {
+                await database.ref(`users/${user.uid}/forwardContracts/${contractId}`).set(contractData);
+                console.log('Forward contract saved to Firebase:', contractId);
+                
+                // Show success message
+                const successMsg = document.createElement('div');
+                successMsg.className = 'forward-contract-save-success';
+                successMsg.style.cssText = 'margin-top: 15px; padding: 12px; background: #d1fae5; color: #065f46; border-radius: 8px; font-size: 14px;';
+                successMsg.textContent = '✅ Contract saved successfully! You can view it in the Payments section.';
+                resultsSection.querySelector('.forward-contract-result-block').appendChild(successMsg);
+                
+                // Refresh payment section if it's currently visible
+                if (document.getElementById('paymentsSection') && 
+                    document.getElementById('paymentsSection').style.display !== 'none') {
+                    loadForwardContractsInPayments();
+                }
+            } catch (error) {
+                console.error('Error saving forward contract to Firebase:', error);
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'forward-contract-save-error';
+                errorMsg.style.cssText = 'margin-top: 15px; padding: 12px; background: #fee2e2; color: #991b1b; border-radius: 8px; font-size: 14px;';
+                errorMsg.textContent = '⚠️ Contract saved locally but failed to save to database. Please try again.';
+                resultsSection.querySelector('.forward-contract-result-block').appendChild(errorMsg);
+            }
+        } else {
+            console.warn('Firebase not initialized or user not logged in. Contract saved locally only.');
+        }
     }
 
     function formatAmount(amount) {
@@ -5975,5 +5876,231 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
+
+    /**
+     * Load forward contracts from Firebase and display in payments section
+     */
+    async function loadForwardContractsInPayments() {
+        const contractsList = document.getElementById('forwardContractsList');
+        const contractsEmpty = document.getElementById('forwardContractsEmpty');
+        
+        if (!contractsList) return;
+        
+        if (!auth || !database || !auth.currentUser) {
+            contractsList.innerHTML = '<div style="text-align: center; padding: 40px; color: #6b7280;">Please log in to view forward contracts.</div>';
+            return;
+        }
+        
+        const user = auth.currentUser;
+        
+        try {
+            contractsList.innerHTML = '<div class="forward-contracts-loading" style="text-align: center; padding: 40px;"><div class="spinner" style="border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div><p>Loading forward contracts...</p></div>';
+            
+            const contractsRef = database.ref(`users/${user.uid}/forwardContracts`);
+            const snapshot = await contractsRef.once('value');
+            
+            if (!snapshot.exists() || Object.keys(snapshot.val()).length === 0) {
+                contractsList.style.display = 'none';
+                if (contractsEmpty) contractsEmpty.style.display = 'block';
+                return;
+            }
+            
+            const contracts = snapshot.val();
+            const contractsArray = Object.keys(contracts).map(key => ({
+                id: key,
+                ...contracts[key]
+            })).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            
+            contractsList.innerHTML = '';
+            contractsList.style.display = 'grid';
+            if (contractsEmpty) contractsEmpty.style.display = 'none';
+            
+            contractsArray.forEach(contract => {
+                const contractCard = createForwardContractCard(contract);
+                contractsList.appendChild(contractCard);
+            });
+            
+        } catch (error) {
+            console.error('Error loading forward contracts:', error);
+            contractsList.innerHTML = '<div style="text-align: center; padding: 40px; color: #dc2626;">Error loading forward contracts. Please try again.</div>';
+        }
+    }
+
+    /**
+     * Create a forward contract card element
+     */
+    function createForwardContractCard(contract) {
+        const card = document.createElement('div');
+        card.className = 'forward-contract-card';
+        
+        const createdAt = new Date(contract.createdAt);
+        const formattedDate = createdAt.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        const preferredAmount = contract.preferredFinalAmount ? formatAmount(contract.preferredFinalAmount) : 'N/A';
+        const settlementDate = contract.settlementDate || 'N/A';
+        const currentRate = contract.currentRate ? contract.currentRate.toFixed(4) : 'N/A';
+        
+        card.innerHTML = `
+            <div class="forward-contract-card-header">
+                <div>
+                    <div class="forward-contract-card-title">Forward Contract - ${contract.currencyPair}</div>
+                    <div class="forward-contract-card-date">Created: ${formattedDate}</div>
+                </div>
+                <span class="forward-contract-card-badge">${contract.status || 'Active'}</span>
+            </div>
+            <div class="forward-contract-card-details">
+                <div class="forward-contract-detail-item">
+                    <span class="forward-contract-detail-label">Amount</span>
+                    <span class="forward-contract-detail-value">${formatAmount(contract.amount)}</span>
+                </div>
+                <div class="forward-contract-detail-item">
+                    <span class="forward-contract-detail-label">Settlement Date</span>
+                    <span class="forward-contract-detail-value">${settlementDate}</span>
+                </div>
+                <div class="forward-contract-detail-item">
+                    <span class="forward-contract-detail-label">Currency Pair</span>
+                    <span class="forward-contract-detail-value">${contract.currencyPair}</span>
+                </div>
+                <div class="forward-contract-detail-item">
+                    <span class="forward-contract-detail-label">Current Rate</span>
+                    <span class="forward-contract-detail-value">${currentRate}</span>
+                </div>
+                <div class="forward-contract-detail-item">
+                    <span class="forward-contract-detail-label">Preferred Final Amount</span>
+                    <span class="forward-contract-detail-value">${preferredAmount}</span>
+                </div>
+                <div class="forward-contract-detail-item">
+                    <span class="forward-contract-detail-label">Risk Tolerance</span>
+                    <span class="forward-contract-detail-value">${contract.riskTolerance ? contract.riskTolerance.charAt(0).toUpperCase() + contract.riskTolerance.slice(1) : 'N/A'}</span>
+                </div>
+            </div>
+            <div class="forward-contract-card-actions">
+                <button class="forward-contract-action-btn forward-contract-action-btn-primary" onclick="downloadForwardContractPDF('${contract.id}')">
+                    <span>📄</span>
+                    <span>Download PDF</span>
+                </button>
+                <button class="forward-contract-action-btn forward-contract-action-btn-secondary" onclick="viewForwardContractDetails('${contract.id}')">
+                    <span>👁️</span>
+                    <span>View Details</span>
+                </button>
+            </div>
+        `;
+        
+        return card;
+    }
+
+    /**
+     * Download forward contract PDF from Firebase
+     */
+    async function downloadForwardContractPDF(contractId) {
+        if (!auth || !database || !auth.currentUser) {
+            alert('Please log in to download the contract.');
+            return;
+        }
+        
+        const user = auth.currentUser;
+        
+        try {
+            const contractRef = database.ref(`users/${user.uid}/forwardContracts/${contractId}`);
+            const snapshot = await contractRef.once('value');
+            
+            if (!snapshot.exists()) {
+                alert('Contract not found.');
+                return;
+            }
+            
+            const contract = snapshot.val();
+            
+            if (!contract.pdfBase64) {
+                alert('PDF data not available for this contract.');
+                return;
+            }
+            
+            // Convert Base64 to blob and download
+            const pdfData = contract.pdfBase64;
+            const byteCharacters = atob(pdfData);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'application/pdf' });
+            
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = contract.pdfFileName || `Forward_Contract_${contractId}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+        } catch (error) {
+            console.error('Error downloading PDF:', error);
+            alert('Error downloading PDF. Please try again.');
+        }
+    }
+
+    /**
+     * View forward contract details
+     */
+    async function viewForwardContractDetails(contractId) {
+        if (!auth || !database || !auth.currentUser) {
+            alert('Please log in to view contract details.');
+            return;
+        }
+        
+        const user = auth.currentUser;
+        
+        try {
+            const contractRef = database.ref(`users/${user.uid}/forwardContracts/${contractId}`);
+            const snapshot = await contractRef.once('value');
+            
+            if (!snapshot.exists()) {
+                alert('Contract not found.');
+                return;
+            }
+            
+            const contract = snapshot.val();
+            
+            // Create a modal or alert with contract details
+            const details = `
+Forward Contract Details
+
+Amount: ${formatAmount(contract.amount)}
+Settlement Date: ${contract.settlementDate}
+Currency Pair: ${contract.currencyPair}
+Current Rate: ${contract.currentRate ? contract.currentRate.toFixed(4) : 'N/A'}
+Risk Tolerance: ${contract.riskTolerance ? contract.riskTolerance.charAt(0).toUpperCase() + contract.riskTolerance.slice(1) : 'N/A'}
+Volatility: ${contract.volatility || 'N/A'}
+Ideal Window: ${contract.idealWindow || 'N/A'}
+Preferred Date: ${contract.preferredDate || 'N/A'}
+Preferred Date Rate: ${contract.preferredDateRate ? contract.preferredDateRate.toFixed(4) : 'N/A'}
+Preferred Final Amount: ${contract.preferredFinalAmount ? formatAmount(contract.preferredFinalAmount) : 'N/A'}
+Least Preferred Date: ${contract.leastPreferredDate || 'N/A'}
+Least Preferred Date Rate: ${contract.leastPreferredDateRate ? contract.leastPreferredDateRate.toFixed(4) : 'N/A'}
+Least Preferred Final Amount: ${contract.leastPreferredFinalAmount ? formatAmount(contract.leastPreferredFinalAmount) : 'N/A'}
+Risk Premium Rate: ${contract.riskPremium && contract.riskPremium.rate ? (contract.riskPremium.rate * 100).toFixed(2) + '%' : 'N/A'}
+Recommendation: ${contract.recommendation || 'N/A'}
+Created: ${new Date(contract.createdAt).toLocaleString()}
+            `;
+            
+            alert(details);
+            
+        } catch (error) {
+            console.error('Error viewing contract details:', error);
+            alert('Error loading contract details. Please try again.');
+        }
+    }
+
+    // Make functions globally available
+    window.downloadForwardContractPDF = downloadForwardContractPDF;
+    window.viewForwardContractDetails = viewForwardContractDetails;
 });
 
